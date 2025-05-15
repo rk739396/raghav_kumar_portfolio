@@ -77,6 +77,7 @@
           <div class=" hidden md:flex justify-center items-center list-none gap-10 ">
             <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="skillsLink"><a>Skills</a></li>
             <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="experienceLink"><a>Experience</a></li>
+            <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="projectsLink"><a>Projects</a></li>
             <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="contactLink"><a>Contact</a></li>
           </div>
           <div class=" hidden md:flex justify-center items-center list-none gap-10 ">
@@ -740,6 +741,14 @@
   });
   document.getElementById('contactLink').addEventListener('click', function() {
     const experienceSection = document.querySelector('[name="contact"]');
+    experienceSection.scrollIntoView({
+      behavior: 'smooth'
+    });
+  });
+  });
+  
+  document.getElementById('projectsLink').addEventListener('click', function() {
+    const experienceSection = document.querySelector('[name="projects"]');
     experienceSection.scrollIntoView({
       behavior: 'smooth'
     });
