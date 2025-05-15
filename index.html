@@ -75,9 +75,9 @@
             <div class=" text-xl text-amber-600 font-bold">Raghav Kumar</div>
           </div>
           <div class=" hidden md:flex justify-center items-center list-none gap-10 ">
-            <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer"><a>Skills</a></li>
+            <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="skillsLink"><a>Skills</a></li>
             <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="experienceLink"><a>Experience</a></li>
-            <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer"><a>Contact</a></li>
+            <li class="hover:text-cyan-400 text-xl font-semibold duration-500 cursor-pointer" id="contactLink"><a>Contact</a></li>
           </div>
           <div class=" hidden md:flex justify-center items-center list-none gap-10 ">
             <div class="MuiBox-root css-0"><button
@@ -727,6 +727,19 @@
 <script>
   document.getElementById('experienceLink').addEventListener('click', function() {
     const experienceSection = document.querySelector('[name="experience"]');
+    experienceSection.scrollIntoView({
+      behavior: 'smooth'
+    });
+  });
+
+  document.getElementById('skillsLink').addEventListener('click', function() {
+    const experienceSection = document.querySelector('[name="skills"]');
+    experienceSection.scrollIntoView({
+      behavior: 'smooth'
+    });
+  });
+  document.getElementById('contactLink').addEventListener('click', function() {
+    const experienceSection = document.querySelector('[name="contact"]');
     experienceSection.scrollIntoView({
       behavior: 'smooth'
     });
