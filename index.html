@@ -578,12 +578,12 @@
           <div class="flex flex-col gap-3 justify-center items-center my-3">
             <div class="text-center text-amber-600 text-4xl font-bold">Contact Me</div>
             <div class="text-center text-xl">Feel free to reach out to me for any queries</div>
-            <form action="" method="POST"
+            <form action="https://rk739396.pythonanywhere.com/contact_us/" method="POST"
               class="flex flex-col gap-6 bg-gray-950 p-5 rounded-lg w-full md:w-2/3 lg:w-1/2">
               <div class="text-amber-600 font-semibold ml-2 text-xl">Email Me</div><input
-                class="bg-gray-700 h-14 p-3 rounded-lg" type="text" name="name" placeholder="Your Name"
-                required=""><input class="bg-gray-700 h-14 p-3 rounded-lg" type="email" name="email"
-                placeholder="Your Email" required=""><textarea class="bg-gray-700 p-3 rounded-lg" name="message"
+                class="bg-gray-700 h-14 p-3 rounded-lg" type="text" name="Name" placeholder="Your Name"
+                required=""><input class="bg-gray-700 h-14 p-3 rounded-lg" type="email" name="Email"
+                placeholder="Your Email" required=""><textarea class="bg-gray-700 p-3 rounded-lg" name="Message"
                 rows="6" placeholder="Message" required=""></textarea><button
                 class="text-gray-950 font-semibold h-12 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 shadow hover:shadow-cyan-400"
                 type="submit">Send</button>
@@ -760,28 +760,28 @@
   document.getElementById('contact_me').addEventListener('submit', function (event) {
     event.preventDefault();
     name = document.getElementsByName("name")[0].value
-    console.log("name is ",name)
-    email = document.getElementsByName("email")[0].value
-    console.log("email is ",email)
-    message = document.getElementsByName("message")[0].value
-    console.log("message is ",message)
-    var settings = {
-      "url": "https://rk739396.pythonanywhere.com/contact_us/",
-      "method": "POST",
-      "timeout": 0,
-      "headers": {
-        "Content-Type": "application/json"
-      },
-      "data": JSON.stringify({
-        "Name": name,
-        "Email": email,
-        "Message": message
-      }),
-    };
+    // console.log("name is ",name)
+    // email = document.getElementsByName("email")[0].value
+    // console.log("email is ",email)
+    // message = document.getElementsByName("message")[0].value
+    // console.log("message is ",message)
+    // var settings = {
+    //   "url": "https://rk739396.pythonanywhere.com/contact_us/",
+    //   "method": "POST",
+    //   "timeout": 0,
+    //   "headers": {
+    //     "Content-Type": "application/json"
+    //   },
+    //   "data": JSON.stringify({
+    //     "Name": name,
+    //     "Email": email,
+    //     "Message": message
+    //   }),
+    // };
 
-    $.ajax(settings).done(function (response) {
-      console.log(response);
-    });
+    // $.ajax(settings).done(function (response) {
+    //   console.log(response);
+    // });
     
   })
 </script>
