@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Retailer Cash Collection</title>
+
+<!-- Bootstrap 5 CSS -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css">
+<!-- Google Font: Space Grotesk (headings) + Inter (body/data) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* =========================================================
+     DESIGN TOKENS
+     Palette: Ledger / cash-book theme — deep ink navy, bank-note
+     green for money-in, amber for pending settlement, a warm
+     "receipt paper" off-white surface (not cream/terracotta).
+     ========================================================= */
+  :root{
+    --ink-900:#0B1E33;      /* deep navy - headers/nav */
+    --ink-800:#132D4A;
+    --ink-700:#1E3E63;
+    --paper:#F5F7F5;        /* receipt-paper background */
+    --paper-card:#FFFFFF;
+    --line:#DCE3DE;
+    --note-green:#0F7A4D;   /* bank-note green - money / success */
+    --note-green-dark:#0B5C3A;
+    --note-green-soft:#E4F5EC;
+    --amber:#B5790B;        /* pending / office handover */
+    --amber-soft:#FBF0DC;
+    --slate-ink:#22303F;
+    --muted:#63758A;
+    --danger:#B3261E;
+    --danger-soft:#FBE7E5;
+    --radius:12px;
+    --shadow-sm:0 1px 2px rgba(11,30,51,.06), 0 1px 1px rgba(11,30,51,.04);
+    --shadow-md:0 6px 20px -6px rgba(11,30,51,.18);
+  }
+
+  *{box-sizing:border-box;}
+
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(circle at 1px 1px, rgba(11,30,51,.035) 1px, transparent 0);
+    background-size:22px 22px;
+    font-family:'Inter',system-ui,sans-serif;
+    color:var(--slate-ink);
+    padding-bottom:60px;
+  }
+
+  h1,h2,h3,h4,h5,.font-display{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+  }
+
+  .mono{ font-family:'JetBrains Mono',monospace; letter-spacing:.02em; }
+
+  /* ---------- Top App Bar ---------- */
+  .topbar{
+    background:linear-gradient(135deg,var(--ink-900) 0%, var(--ink-800) 60%, var(--ink-700) 100%);
+    color:#fff;
+    padding:22px 0 60px;
+    position:relative;
+    overflow:hidden;
+  }
+  .topbar::after{
+    content:"";
+    position:absolute; inset:0;
+    background-image:repeating-linear-gradient(115deg, rgba(255,255,255,.035) 0 2px, transparent 2px 26px);
+    pointer-events:none;
+  }
+  .topbar .brand-mark{
+    width:44px;height:44px;border-radius:10px;
+    background:var(--note-green);
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.3rem; color:#fff;
+    box-shadow:var(--shadow-md);
+    flex-shrink:0;
+  }
+  .topbar .brand-title{ font-weight:700; font-size:1.35rem; letter-spacing:-.01em; }
+  .topbar .brand-sub{ color:#B7C6D6; font-size:.82rem; }
+  .fos-chip{
+    background:rgba(255,255,255,.09);
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;
+    padding:6px 14px;
+    font-size:.82rem;
+    display:inline-flex;align-items:center;gap:8px;
+  }
+
+  /* ---------- Summary Cards (pull up over topbar) ---------- */
+  .summary-row{ margin-top:-46px; position:relative; z-index:3; }
+  .stat-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:20px 20px 18px;
+    box-shadow:var(--shadow-md);
+    height:100%;
+    transition:transform .18s ease, box-shadow .18s ease;
+    border-top:3px solid var(--note-green);
+  }
+  .stat-card:hover{ transform:translateY(-3px); box-shadow:0 14px 28px -10px rgba(11,30,51,.24); }
+  .stat-card.acc-green{ border-top-color:var(--note-green); }
+  .stat-card.acc-blue{ border-top-color:var(--ink-700); }
+  .stat-card.acc-amber{ border-top-color:var(--amber); }
+  .stat-card.acc-red{ border-top-color:var(--danger); }
+  .stat-icon{
+    width:42px;height:42px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:1.15rem;
+  }
+  .stat-icon.green{ background:var(--note-green-soft); color:var(--note-green-dark); }
+  .stat-icon.blue{ background:#E7EDF4; color:var(--ink-700); }
+  .stat-icon.amber{ background:var(--amber-soft); color:var(--amber); }
+  .stat-icon.red{ background:var(--danger-soft); color:var(--danger); }
+  .stat-value{ font-family:'JetBrains Mono',monospace; font-size:1.6rem; font-weight:600; letter-spacing:-.01em; }
+  .stat-label{ font-size:.78rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); font-weight:600; }
+  .stat-trend{ font-size:.76rem; color:var(--note-green-dark); font-weight:600; }
+
+  /* ---------- Section Cards ---------- */
+  .section-card{
+    background:var(--paper-card);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow-sm);
+    margin-top:24px;
+  }
+  .section-card .section-head{
+    padding:18px 24px;
+    border-bottom:1px solid var(--line);
+    display:flex; align-items:center; gap:12px;
+  }
+  .section-card .section-head .num{
+    width:30px;height:30px;border-radius:8px;
+    background:var(--ink-900); color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.82rem; font-weight:700; font-family:'JetBrains Mono',monospace;
+    flex-shrink:0;
+  }
+  .section-card .section-head h2{
+    font-size:1.05rem; font-weight:700; margin:0; letter-spacing:-.01em;
+  }
+  .section-card .section-head .hint{ font-size:.78rem; color:var(--muted); margin-left:auto; }
+  .section-body{ padding:22px 24px 26px; }
+
+  /* ---------- Form Controls ---------- */
+  label.form-label{ font-size:.82rem; font-weight:600; color:var(--slate-ink); margin-bottom:6px; }
+  label.form-label .opt{ font-weight:400; color:var(--muted); font-size:.76rem; }
+  .form-control, .form-select{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:.55rem .8rem;
+    font-size:.92rem;
+    background-color:#FCFDFC;
+  }
+  .form-control:focus, .form-select:focus{
+    border-color:var(--note-green);
+    box-shadow:0 0 0 3px rgba(15,122,77,.13);
+    background-color:#fff;
+  }
+  .input-group-text{
+    background:#F0F3F1; border:1px solid var(--line); color:var(--muted); font-size:.85rem;
+  }
+  .amount-input .input-group-text{
+    background:var(--note-green-soft); color:var(--note-green-dark); font-weight:700;
+    border-color:var(--line);
+  }
+  textarea.form-control{ min-height:80px; }
+  .invalid-feedback{ font-size:.78rem; }
+
+  /* ---------- Handover Type Selector ---------- */
+  .handover-choice{
+    border:1.5px solid var(--line);
+    border-radius:10px;
+    padding:16px;
+    cursor:pointer;
+    transition:all .15s ease;
+    background:#fff;
+    height:100%;
+  }
+  .handover-choice:hover{ border-color:var(--note-green); }
+  .handover-choice input[type="radio"]{ accent-color:var(--note-green); width:17px; height:17px; margin-top:2px; }
+  .handover-choice.active-bank{ border-color:var(--note-green); background:var(--note-green-soft); }
+  .handover-choice.active-office{ border-color:var(--amber); background:var(--amber-soft); }
+  .handover-choice .hc-title{ font-weight:700; font-size:.94rem; }
+  .handover-choice .hc-sub{ font-size:.78rem; color:var(--muted); }
+  .handover-choice .hc-icon{ font-size:1.3rem; }
+
+  /* ---------- Conditional panels ---------- */
+  .conditional-panel{
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:20px;
+    margin-top:18px;
+    background:#FBFCFB;
+    animation:fadeSlide .28s ease;
+  }
+  .conditional-panel.bank-panel{ border-color:rgba(15,122,77,.35); background:linear-gradient(180deg,var(--note-green-soft) 0%,#fff 130px); }
+  .conditional-panel.office-panel{ border-color:rgba(181,121,11,.35); background:linear-gradient(180deg,var(--amber-soft) 0%,#fff 130px); }
+
+  @keyframes fadeSlide{
+    from{ opacity:0; transform:translateY(-8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  /* ---------- Signature Pad ---------- */
+  #signaturePad{
+    border:1.5px dashed var(--line);
+    border-radius:10px;
+    background:
+      repeating-linear-gradient(#fff, #fff 27px, #E9EEEA 28px);
+    width:100%;
+    touch-action:none;
+    cursor:crosshair;
+  }
+  .sig-toolbar{ display:flex; gap:8px; margin-top:8px; }
+
+  /* ---------- Confirm checkbox ---------- */
+  .confirm-box{
+    background:#F0F3F1;
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:14px 16px;
+  }
+  .confirm-box .form-check-input{ width:19px;height:19px; accent-color:var(--note-green); margin-top:3px;}
+
+  /* ---------- Buttons ---------- */
+  .btn-ledger-primary{
+    background:var(--note-green); border-color:var(--note-green); color:#fff; font-weight:600;
+  }
+  .btn-ledger-primary:hover{ background:var(--note-green-dark); border-color:var(--note-green-dark); color:#fff; }
+  .btn-ledger-outline{
+    border-color:var(--ink-700); color:var(--ink-700); font-weight:600; background:#fff;
+  }
+  .btn-ledger-outline:hover{ background:var(--ink-700); color:#fff; }
+  .btn-ledger-ghost{ color:var(--muted); font-weight:600; border:1px solid var(--line); background:#fff; }
+  .btn-ledger-ghost:hover{ background:#F0F3F1; }
+  .action-bar{
+    position:sticky; bottom:0; z-index:5;
+    background:rgba(245,247,245,.92);
+    backdrop-filter:blur(6px);
+    border-top:1px solid var(--line);
+    padding:14px 0;
+    margin-top:26px;
+  }
+
+  /* ---------- Badges / Status ---------- */
+  .badge-status{ font-weight:600; font-size:.72rem; padding:.4em .7em; border-radius:999px; }
+  .badge-verified{ background:var(--note-green-soft); color:var(--note-green-dark); }
+  .badge-pending{ background:var(--amber-soft); color:var(--amber); }
+  .badge-draft{ background:#EAEDF1; color:var(--muted); }
+  .badge-type-bank{ background:#E7EDF4; color:var(--ink-700); }
+  .badge-type-office{ background:var(--amber-soft); color:var(--amber); }
+
+  /* ---------- Table ---------- */
+  .ledger-table thead th{
+    background:var(--ink-900); color:#fff; font-size:.74rem;
+    text-transform:uppercase; letter-spacing:.05em; font-weight:600;
+    border:none; padding:12px 14px; white-space:nowrap;
+  }
+  .ledger-table tbody td{ padding:12px 14px; font-size:.87rem; vertical-align:middle; border-color:var(--line); }
+  .ledger-table tbody tr{ transition:background .12s ease; }
+  .ledger-table tbody tr:hover{ background:#F3F6F3; }
+  .amount-cell{ font-family:'JetBrains Mono',monospace; font-weight:600; color:var(--note-green-dark); }
+  .empty-state{ padding:50px 20px; text-align:center; color:var(--muted); }
+  .empty-state i{ font-size:2.4rem; color:var(--line); }
+
+  /* ---------- Toast ---------- */
+  .toast-success{
+    background:var(--note-green); color:#fff;
+  }
+
+  /* ---------- Section number line connector (visual signature) ---------- */
+  .form-flow-line{
+    width:2px; background:var(--line); flex:1; margin:2px auto;
+  }
+
+  /* Searchable dropdown results */
+  .retailer-results{
+    position:absolute; z-index:20; background:#fff; width:100%;
+    border:1px solid var(--line); border-radius:8px; box-shadow:var(--shadow-md);
+    max-height:220px; overflow-y:auto; display:none;
+  }
+  .retailer-results .r-item{ padding:.55rem .8rem; cursor:pointer; font-size:.88rem; border-bottom:1px solid var(--line); }
+  .retailer-results .r-item:last-child{ border-bottom:none; }
+  .retailer-results .r-item:hover{ background:var(--note-green-soft); }
+  .retailer-results .r-item small{ color:var(--muted); display:block; }
+
+  @media print{
+    .no-print{ display:none !important; }
+  }
+
+  @media (max-width: 767.98px){
+    .topbar{ padding-bottom:74px; }
+    .stat-value{ font-size:1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- =========================================================
+     TOP APP BAR
+     ========================================================= -->
+<header class="topbar">
+  <div class="container">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+      <div class="brand-mark"><i class="bi bi-cash-coin"></i></div>
+      <div>
+        <div class="brand-title">Retailer Cash Collection</div>
+        <div class="brand-sub">Field Officer Sales · Cash Collection &amp; Handover Ledger</div>
+      </div>
+      <div class="ms-auto d-flex align-items-center gap-2">
+        <span class="fos-chip"><i class="bi bi-person-badge"></i> FOS-2291 · R. Kulkarni</span>
+        <span class="fos-chip"><i class="bi bi-calendar3"></i> <span id="topbarDate"></span></span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- =========================================================
+       DASHBOARD SUMMARY CARDS
+       ========================================================= -->
+  <div class="row summary-row g-3">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card acc-green">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="stat-icon green"><i class="bi bi-wallet2"></i></div>
+          <span class="stat-trend"><i class="bi bi-arrow-up-short"></i>Today</span>
+        </div>
+        <div class="stat-value">₹<span id="statTotalToday">0</span></div>
+        <div class="stat-label">Total Collection Today</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card acc-blue">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="stat-icon blue"><i class="bi bi-bank"></i></div>
+        </div>
+        <div class="stat-value">₹<span id="statBankDeposits">0</span></div>
+        <div class="stat-label">Bank Deposits</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card acc-amber">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="stat-icon amber"><i class="bi bi-building"></i></div>
+        </div>
+        <div class="stat-value">₹<span id="statOfficeHandovers">0</span></div>
+        <div class="stat-label">Office Handovers</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card acc-red">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div class="stat-icon red"><i class="bi bi-hourglass-split"></i></div>
+        </div>
+        <div class="stat-value"><span id="statPendingDeposits">0</span></div>
+        <div class="stat-label">Pending Deposits</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MAIN FORM
+       ========================================================= -->
+  <form id="collectionForm" class="needs-validation" novalidate>
+
+    <!-- ---------- Retailer Details ---------- -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="num">1</div>
+        <h2>Retailer Details</h2>
+        <span class="hint">Who was the cash collected from?</span>
+      </div>
+      <div class="section-body">
+        <div class="row g-3">
+          <div class="col-md-6 position-relative">
+            <label class="form-label" for="retailerSearch">Retailer Name</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-search"></i></span>
+              <input type="text" class="form-control" id="retailerSearch" placeholder="Type to search retailer..." autocomplete="off" required>
+            </div>
+            <div class="retailer-results" id="retailerResults"></div>
+            <div class="invalid-feedback">Please select a retailer.</div>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label" for="retailerCode">Retailer Code</label>
+            <input type="text" class="form-control" id="retailerCode" placeholder="e.g. RTL-0142" readonly required>
+            <div class="invalid-feedback">Retailer code is required.</div>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label" for="mobileNumber">Mobile Number</label>
+            <input type="tel" class="form-control" id="mobileNumber" pattern="[0-9]{10}" placeholder="10-digit number" required>
+            <div class="invalid-feedback">Enter a valid 10-digit mobile number.</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="retailerAddress">Address <span class="opt">(optional)</span></label>
+            <textarea class="form-control" id="retailerAddress" rows="2" placeholder="Shop address / area"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Collection Details ---------- -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="num">2</div>
+        <h2>Collection Details</h2>
+        <span class="hint">Amount &amp; receipt information</span>
+      </div>
+      <div class="section-body">
+        <div class="row g-3">
+          <div class="col-md-3 col-6">
+            <label class="form-label" for="collectionDate">Collection Date</label>
+            <input type="date" class="form-control" id="collectionDate" required>
+            <div class="invalid-feedback">Select the collection date.</div>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label" for="collectionTime">Collection Time <span class="opt">(auto)</span></label>
+            <input type="time" class="form-control" id="collectionTime" readonly>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label" for="amountCollected">Amount Collected</label>
+            <div class="input-group amount-input">
+              <span class="input-group-text">₹</span>
+              <input type="number" class="form-control" id="amountCollected" min="1" step="1" placeholder="0" required>
+            </div>
+            <div class="invalid-feedback">Enter a valid collected amount.</div>
+          </div>
+          <div class="col-md-3 col-6">
+            <label class="form-label" for="paymentMode">Payment Mode</label>
+            <input type="text" class="form-control" id="paymentMode" value="Cash" readonly>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="form-label" for="receiptNumber">Receipt Number</label>
+            <input type="text" class="form-control" id="receiptNumber" placeholder="e.g. RCPT-58231" required>
+            <div class="invalid-feedback">Receipt number is required.</div>
+          </div>
+          <div class="col-md-8">
+            <label class="form-label" for="collectionRemarks">Remarks</label>
+            <textarea class="form-control" id="collectionRemarks" rows="1" placeholder="Any notes about this collection..."></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Handover Type ---------- -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="num">3</div>
+        <h2>Handover Type</h2>
+        <span class="hint">Where did the cash go?</span>
+      </div>
+      <div class="section-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="handover-choice d-flex gap-3" id="choiceBankLabel">
+              <input type="radio" name="handoverType" id="handoverBank" value="bank">
+              <span>
+                <span class="hc-icon text-success"><i class="bi bi-bank2"></i></span>
+                <div class="hc-title mt-1">Bank Deposit</div>
+                <div class="hc-sub">Cash deposited directly into a bank account</div>
+              </span>
+            </label>
+          </div>
+          <div class="col-md-6">
+            <label class="handover-choice d-flex gap-3" id="choiceOfficeLabel">
+              <input type="radio" name="handoverType" id="handoverOffice" value="office">
+              <span>
+                <span class="hc-icon" style="color:var(--amber)"><i class="bi bi-building-fill"></i></span>
+                <div class="hc-title mt-1">Office Accounts</div>
+                <div class="hc-sub">Cash handed over to the Accounts Team</div>
+              </span>
+            </label>
+          </div>
+        </div>
+        <div class="invalid-feedback d-block" id="handoverTypeError" style="display:none !important;">Please select a handover type.</div>
+
+        <!-- ---------- Bank Deposit Panel ---------- -->
+        <div class="conditional-panel bank-panel" id="bankPanel" style="display:none;">
+          <h6 class="fw-bold mb-3 text-success"><i class="bi bi-bank2 me-1"></i> Bank Deposit Details</h6>
+          <div class="row g-3">
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="bankName">Bank Name</label>
+              <select class="form-select" id="bankName">
+                <option value="">Select bank...</option>
+                <option>HDFC Bank</option>
+                <option>ICICI Bank</option>
+                <option>State Bank of India</option>
+                <option>Axis Bank</option>
+                <option>Kotak Mahindra Bank</option>
+                <option>Punjab National Bank</option>
+              </select>
+              <div class="invalid-feedback">Select the bank.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="branchName">Branch Name</label>
+              <input type="text" class="form-control" id="branchName" placeholder="e.g. MG Road Branch">
+              <div class="invalid-feedback">Branch name is required.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="depositSlipNumber">Deposit Slip Number</label>
+              <input type="text" class="form-control" id="depositSlipNumber" placeholder="Slip #">
+              <div class="invalid-feedback">Deposit slip number is required.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="depositDate">Deposit Date</label>
+              <input type="date" class="form-control" id="depositDate">
+              <div class="invalid-feedback">Select deposit date.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="depositSlipUpload">Upload Deposit Slip <span class="opt">(image/PDF)</span></label>
+              <input type="file" class="form-control" id="depositSlipUpload" accept="image/*,application/pdf">
+              <div class="invalid-feedback">Please upload the deposit slip.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="transactionRefNumber">Transaction Reference Number <span class="opt">(optional)</span></label>
+              <input type="text" class="form-control" id="transactionRefNumber" placeholder="UTR / Txn ref">
+            </div>
+          </div>
+        </div>
+
+        <!-- ---------- Office Accounts Panel ---------- -->
+        <div class="conditional-panel office-panel" id="officePanel" style="display:none;">
+          <h6 class="fw-bold mb-3" style="color:var(--amber)"><i class="bi bi-building-fill me-1"></i> Office Handover Details</h6>
+          <div class="row g-3">
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="accountsExecName">Accounts Executive Name</label>
+              <input type="text" class="form-control" id="accountsExecName" placeholder="Executive receiving the cash">
+              <div class="invalid-feedback">Executive name is required.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="officeLocation">Office Location</label>
+              <input type="text" class="form-control" id="officeLocation" placeholder="e.g. Regional HQ - Pune">
+              <div class="invalid-feedback">Office location is required.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="acknowledgementNumber">Acknowledgement Number</label>
+              <input type="text" class="form-control" id="acknowledgementNumber" placeholder="Ack #">
+              <div class="invalid-feedback">Acknowledgement number is required.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="handoverDate">Handover Date</label>
+              <input type="date" class="form-control" id="handoverDate">
+              <div class="invalid-feedback">Select handover date.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="handoverTime">Handover Time</label>
+              <input type="time" class="form-control" id="handoverTime">
+              <div class="invalid-feedback">Select handover time.</div>
+            </div>
+            <div class="col-md-4 col-6">
+              <label class="form-label" for="signedReceiptUpload">Upload Signed Receipt</label>
+              <input type="file" class="form-control" id="signedReceiptUpload" accept="image/*,application/pdf">
+              <div class="invalid-feedback">Please upload the signed receipt.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Verification Section ---------- -->
+    <div class="section-card">
+      <div class="section-head">
+        <div class="num">4</div>
+        <h2>Verification</h2>
+        <span class="hint">Confirm &amp; sign off</span>
+      </div>
+      <div class="section-body">
+        <div class="row g-3">
+          <div class="col-md-4 col-6">
+            <label class="form-label" for="fosExecName">FOS Executive Name</label>
+            <input type="text" class="form-control" id="fosExecName" value="Rahul Kulkarni" required>
+            <div class="invalid-feedback">FOS executive name is required.</div>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="form-label" for="employeeId">Employee ID</label>
+            <input type="text" class="form-control" id="employeeId" value="FOS-2291" required>
+            <div class="invalid-feedback">Employee ID is required.</div>
+          </div>
+          <div class="col-md-4 col-6">
+            <label class="form-label" for="gpsLocation">GPS Location <span class="opt">(optional)</span></label>
+            <div class="input-group">
+              <input type="text" class="form-control" id="gpsLocation" placeholder="Lat, Long" readonly>
+              <button class="btn btn-ledger-outline" type="button" id="captureGpsBtn"><i class="bi bi-geo-alt"></i></button>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <label class="form-label">Digital Signature Pad <span class="opt">(optional)</span></label>
+            <canvas id="signaturePad" height="140"></canvas>
+            <div class="sig-toolbar">
+              <button type="button" class="btn btn-sm btn-ledger-ghost" id="clearSigBtn"><i class="bi bi-eraser"></i> Clear Signature</button>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="confirm-box d-flex gap-2 align-items-start mt-2">
+              <input class="form-check-input mt-0" type="checkbox" id="confirmCheck" required>
+              <label class="form-check-label small" for="confirmCheck">
+                I confirm that the above information is correct.
+              </label>
+            </div>
+            <div class="invalid-feedback" id="confirmError" style="display:none;">You must confirm before submitting.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Action Bar ---------- -->
+    <div class="action-bar no-print">
+      <div class="d-flex flex-wrap gap-2 justify-content-end">
+        <button type="button" class="btn btn-ledger-ghost" id="resetBtn"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+        <button type="button" class="btn btn-ledger-outline" id="printBtn"><i class="bi bi-printer"></i> Print Receipt</button>
+        <button type="button" class="btn btn-ledger-outline" id="draftBtn"><i class="bi bi-save2"></i> Save Draft</button>
+        <button type="submit" class="btn btn-ledger-primary px-4"><i class="bi bi-check2-circle"></i> Submit</button>
+      </div>
+    </div>
+  </form>
+
+  <!-- =========================================================
+       RECORDS TABLE
+       ========================================================= -->
+  <div class="section-card no-print">
+    <div class="section-head">
+      <div class="num"><i class="bi bi-clock-history"></i></div>
+      <h2>Collection Records</h2>
+      <span class="hint" id="recordCountHint">0 entries</span>
+    </div>
+    <div class="section-body p-0">
+      <div class="table-responsive">
+        <table class="table ledger-table mb-0">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Retailer Name</th>
+              <th>Amount</th>
+              <th>Handover Type</th>
+              <th>Bank / Accounts</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="recordsTableBody">
+            <!-- Rows injected via JavaScript -->
+          </tbody>
+        </table>
+      </div>
+      <div class="empty-state" id="emptyState">
+        <i class="bi bi-inbox"></i>
+        <p class="mt-2 mb-0">No collection records yet. Submit the form above to add one.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- =========================================================
+     TOAST (Success Message)
+     ========================================================= -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+  <div id="successToast" class="toast toast-success align-items-center border-0" role="alert">
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-check-circle-fill me-2"></i><span id="toastMessage">Collection record submitted successfully!</span>
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- =========================================================
+     VIEW RECORD MODAL
+     ========================================================= -->
+<div class="modal fade" id="viewRecordModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-receipt me-2"></i>Collection Record</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body" id="viewRecordBody"><!-- injected --></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ledger-ghost" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* =============================================================
+   RETAILER CASH COLLECTION — APP LOGIC
+   Sections:
+   1. Sample data & state
+   2. Retailer searchable dropdown
+   3. Auto date/time
+   4. Handover type show/hide
+   5. Signature pad
+   6. Validation
+   7. Submit / Draft / Reset / Print
+   8. Table rendering & dashboard summary
+   ============================================================= */
+
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------
+     1. SAMPLE DATA & STATE
+     --------------------------------------------------------- */
+  const retailerDB = [
+    { name: "Shree Krishna Traders", code: "RTL-0142", mobile: "9876543210" },
+    { name: "Ganesh General Store",  code: "RTL-0231", mobile: "9823456712" },
+    { name: "Om Sai Provisions",     code: "RTL-0309", mobile: "9765432190" },
+    { name: "Laxmi Supermart",       code: "RTL-0417", mobile: "9988776655" },
+    { name: "New Bharat Kirana",     code: "RTL-0488", mobile: "9911223344" },
+    { name: "Patel Departmental Store", code: "RTL-0522", mobile: "9765123480" },
+    { name: "City Fresh Mart",       code: "RTL-0601", mobile: "9845123670" }
+  ];
+
+  // In-memory records store (records persist only for this session)
+  let records = [
+    { date: "2026-08-09", retailer: "Ganesh General Store", amount: 18500, type: "bank",   party: "HDFC Bank - MG Road", status: "verified" },
+    { date: "2026-08-09", retailer: "Om Sai Provisions",    amount: 9200,  type: "office", party: "Accounts - Pune HQ",   status: "pending" },
+    { date: "2026-08-08", retailer: "Laxmi Supermart",      amount: 26400, type: "bank",   party: "ICICI Bank - FC Road", status: "verified" }
+  ];
+
+  let recordIdCounter = records.length;
+
+  /* ---------------------------------------------------------
+     2. RETAILER SEARCHABLE DROPDOWN
+     --------------------------------------------------------- */
+  const retailerSearch = document.getElementById("retailerSearch");
+  const retailerResults = document.getElementById("retailerResults");
+  const retailerCode = document.getElementById("retailerCode");
+  const mobileNumber = document.getElementById("mobileNumber");
+
+  function renderRetailerResults(query) {
+    const q = query.trim().toLowerCase();
+    const matches = q
+      ? retailerDB.filter(r => r.name.toLowerCase().includes(q) || r.code.toLowerCase().includes(q))
+      : retailerDB;
+
+    if (!matches.length) {
+      retailerResults.innerHTML = `<div class="r-item text-muted">No retailers found</div>`;
+    } else {
+      retailerResults.innerHTML = matches.map(r => `
+        <div class="r-item" data-name="${r.name}" data-code="${r.code}" data-mobile="${r.mobile}">
+          ${r.name} <small>${r.code} · ${r.mobile}</small>
+        </div>`).join("");
+    }
+    retailerResults.style.display = "block";
+  }
+
+  retailerSearch.addEventListener("focus", () => renderRetailerResults(retailerSearch.value));
+  retailerSearch.addEventListener("input", () => renderRetailerResults(retailerSearch.value));
+
+  retailerResults.addEventListener("click", (e) => {
+    const item = e.target.closest(".r-item");
+    if (!item || !item.dataset.code) return;
+    retailerSearch.value = item.dataset.name;
+    retailerCode.value = item.dataset.code;
+    mobileNumber.value = item.dataset.mobile;
+    retailerResults.style.display = "none";
+    retailerSearch.classList.remove("is-invalid");
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest("#retailerSearch") && !e.target.closest("#retailerResults")) {
+      retailerResults.style.display = "none";
+    }
+  });
+
+  /* ---------------------------------------------------------
+     3. AUTO DATE / TIME
+     --------------------------------------------------------- */
+  function pad(n) { return n.toString().padStart(2, "0"); }
+
+  function setAutoDateTime() {
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+    const timeStr = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    document.getElementById("collectionDate").value = dateStr;
+    document.getElementById("collectionTime").value = timeStr;
+    document.getElementById("topbarDate").textContent = now.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  }
+  setAutoDateTime();
+
+  /* ---------------------------------------------------------
+     4. HANDOVER TYPE SHOW / HIDE
+     --------------------------------------------------------- */
+  const handoverBank = document.getElementById("handoverBank");
+  const handoverOffice = document.getElementById("handoverOffice");
+  const bankPanel = document.getElementById("bankPanel");
+  const officePanel = document.getElementById("officePanel");
+  const choiceBankLabel = document.getElementById("choiceBankLabel");
+  const choiceOfficeLabel = document.getElementById("choiceOfficeLabel");
+  const handoverTypeError = document.getElementById("handoverTypeError");
+
+  function updateHandoverPanels() {
+    const bankSelected = handoverBank.checked;
+    const officeSelected = handoverOffice.checked;
+
+    bankPanel.style.display = bankSelected ? "block" : "none";
+    officePanel.style.display = officeSelected ? "block" : "none";
+
+    choiceBankLabel.classList.toggle("active-bank", bankSelected);
+    choiceOfficeLabel.classList.toggle("active-office", officeSelected);
+
+    // Toggle "required" only on the visible panel's fields so hidden fields don't block validation
+    toggleRequired(bankPanel, bankSelected);
+    toggleRequired(officePanel, officeSelected);
+
+    if (bankSelected || officeSelected) {
+      handoverTypeError.style.setProperty("display", "none", "important");
+    }
+  }
+
+  function toggleRequired(panel, isRequired) {
+    panel.querySelectorAll("input, select").forEach(el => {
+      if (el.type === "file") {
+        el.required = isRequired; // uploads required only when panel visible
+      } else if (el.dataset.optional !== "true") {
+        el.required = isRequired;
+      }
+    });
+  }
+
+  handoverBank.addEventListener("change", updateHandoverPanels);
+  handoverOffice.addEventListener("change", updateHandoverPanels);
+
+  /* ---------------------------------------------------------
+     5. SIGNATURE PAD
+     --------------------------------------------------------- */
+  const canvas = document.getElementById("signaturePad");
+  const ctx = canvas.getContext("2d");
+  let drawing = false;
+  let hasSignature = false;
+
+  function resizeCanvas() {
+    const ratio = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * ratio;
+    canvas.height = 140 * ratio;
+    ctx.scale(ratio, ratio);
+    ctx.strokeStyle = "#0B1E33";
+    ctx.lineWidth = 2;
+    ctx.lineCap = "round";
+  }
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  function getPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const point = e.touches ? e.touches[0] : e;
+    return { x: point.clientX - rect.left, y: point.clientY - rect.top };
+  }
+
+  function startDraw(e) {
+    drawing = true;
+    hasSignature = true;
+    const p = getPos(e);
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    e.preventDefault();
+  }
+  function moveDraw(e) {
+    if (!drawing) return;
+    const p = getPos(e);
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+    e.preventDefault();
+  }
+  function endDraw() { drawing = false; }
+
+  ["mousedown", "touchstart"].forEach(evt => canvas.addEventListener(evt, startDraw));
+  ["mousemove", "touchmove"].forEach(evt => canvas.addEventListener(evt, moveDraw));
+  ["mouseup", "mouseleave", "touchend"].forEach(evt => canvas.addEventListener(evt, endDraw));
+
+  document.getElementById("clearSigBtn").addEventListener("click", () => {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    hasSignature = false;
+  });
+
+  /* ---------------------------------------------------------
+     GPS Capture (optional field)
+     --------------------------------------------------------- */
+  document.getElementById("captureGpsBtn").addEventListener("click", () => {
+    const gpsField = document.getElementById("gpsLocation");
+    if (!navigator.geolocation) {
+      gpsField.value = "Not supported";
+      return;
+    }
+    gpsField.value = "Locating...";
+    navigator.geolocation.getCurrentPosition(
+      (pos) => { gpsField.value = `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`; },
+      () => { gpsField.value = "Permission denied"; }
+    );
+  });
+
+  /* ---------------------------------------------------------
+     6. VALIDATION
+     --------------------------------------------------------- */
+  const form = document.getElementById("collectionForm");
+  const confirmCheck = document.getElementById("confirmCheck");
+  const confirmError = document.getElementById("confirmError");
+
+  function validateForm() {
+    let valid = true;
+
+    if (!form.checkValidity()) valid = false;
+
+    // Handover type must be chosen
+    if (!handoverBank.checked && !handoverOffice.checked) {
+      handoverTypeError.style.setProperty("display", "block", "important");
+      valid = false;
+    }
+
+    // Confirmation checkbox
+    if (!confirmCheck.checked) {
+      confirmError.style.display = "block";
+      valid = false;
+    } else {
+      confirmError.style.display = "none";
+    }
+
+    form.classList.add("was-validated");
+    return valid;
+  }
+
+  /* ---------------------------------------------------------
+     7. SUBMIT / DRAFT / RESET / PRINT
+     --------------------------------------------------------- */
+  const successToastEl = document.getElementById("successToast");
+  const successToast = new bootstrap.Toast(successToastEl, { delay: 3200 });
+  const toastMessage = document.getElementById("toastMessage");
+
+  function showToast(msg) {
+    toastMessage.textContent = msg;
+    successToast.show();
+  }
+
+  function buildRecordFromForm(status) {
+    const type = handoverBank.checked ? "bank" : (handoverOffice.checked ? "office" : "unassigned");
+    const party = type === "bank"
+      ? `${document.getElementById("bankName").value || "Bank"} - ${document.getElementById("branchName").value || "Branch"}`
+      : type === "office"
+        ? `Accounts - ${document.getElementById("officeLocation").value || "Office"}`
+        : "—";
+
+    return {
+      id: ++recordIdCounter,
+      date: document.getElementById("collectionDate").value,
+      retailer: retailerSearch.value || "Unnamed Retailer",
+      amount: Number(document.getElementById("amountCollected").value) || 0,
+      type: type,
+      party: party,
+      status: status
+    };
+  }
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    if (!validateForm()) {
+      const firstInvalid = form.querySelector(":invalid, .is-invalid");
+      if (firstInvalid) firstInvalid.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
+    const status = handoverBank.checked ? "pending" : "verified"; // bank deposits await bank confirmation
+    const record = buildRecordFromForm(status);
+    records.unshift(record);
+    renderTable();
+    renderSummary();
+    showToast("Collection record submitted successfully!");
+    resetFormSoft();
+  });
+
+  document.getElementById("draftBtn").addEventListener("click", () => {
+    const record = buildRecordFromForm("draft");
+    records.unshift(record);
+    renderTable();
+    renderSummary();
+    showToast("Draft saved. You can complete it later.");
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", () => {
+    resetFormSoft(true);
+  });
+
+  document.getElementById("printBtn").addEventListener("click", () => {
+    window.print();
+  });
+
+  function resetFormSoft(fullReset) {
+    if (fullReset) {
+      form.reset();
+      retailerCode.value = "";
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      document.getElementById("gpsLocation").value = "";
+    }
+    form.classList.remove("was-validated");
+    bankPanel.style.display = "none";
+    officePanel.style.display = "none";
+    choiceBankLabel.classList.remove("active-bank");
+    choiceOfficeLabel.classList.remove("active-office");
+    handoverTypeError.style.setProperty("display", "none", "important");
+    confirmError.style.display = "none";
+    setAutoDateTime();
+    toggleRequired(bankPanel, false);
+    toggleRequired(officePanel, false);
+  }
+
+  /* ---------------------------------------------------------
+     8. TABLE RENDERING & DASHBOARD SUMMARY
+     --------------------------------------------------------- */
+  const tbody = document.getElementById("recordsTableBody");
+  const emptyState = document.getElementById("emptyState");
+  const recordCountHint = document.getElementById("recordCountHint");
+
+  const statusBadge = {
+    verified: `<span class="badge-status badge-verified"><i class="bi bi-check-circle me-1"></i>Verified</span>`,
+    pending:  `<span class="badge-status badge-pending"><i class="bi bi-hourglass-split me-1"></i>Pending</span>`,
+    draft:    `<span class="badge-status badge-draft"><i class="bi bi-file-earmark me-1"></i>Draft</span>`
+  };
+
+  const typeBadge = {
+    bank:   `<span class="badge-status badge-type-bank"><i class="bi bi-bank2 me-1"></i>Bank Deposit</span>`,
+    office: `<span class="badge-status badge-type-office"><i class="bi bi-building-fill me-1"></i>Office Accounts</span>`,
+    unassigned: `<span class="badge-status badge-draft">—</span>`
+  };
+
+  function formatINR(num) {
+    return Number(num).toLocaleString("en-IN");
+  }
+
+  function renderTable() {
+    if (!records.length) {
+      tbody.innerHTML = "";
+      emptyState.style.display = "block";
+      recordCountHint.textContent = "0 entries";
+      return;
+    }
+    emptyState.style.display = "none";
+    recordCountHint.textContent = `${records.length} entr${records.length === 1 ? "y" : "ies"}`;
+
+    tbody.innerHTML = records.map((r, idx) => `
+      <tr>
+        <td class="mono">${r.date || "—"}</td>
+        <td class="fw-semibold">${r.retailer}</td>
+        <td class="amount-cell">₹${formatINR(r.amount)}</td>
+        <td>${typeBadge[r.type] || typeBadge.unassigned}</td>
+        <td>${r.party}</td>
+        <td>${statusBadge[r.status] || statusBadge.draft}</td>
+        <td class="no-print">
+          <button class="btn btn-sm btn-ledger-ghost view-record-btn" data-idx="${idx}" title="View">
+            <i class="bi bi-eye"></i>
+          </button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  function renderSummary() {
+    const today = document.getElementById("collectionDate").value || new Date().toISOString().slice(0, 10);
+    const todayRecords = records.filter(r => r.date === today);
+
+    const totalToday = todayRecords.reduce((sum, r) => sum + r.amount, 0);
+    const bankTotal = records.filter(r => r.type === "bank").reduce((sum, r) => sum + r.amount, 0);
+    const officeTotal = records.filter(r => r.type === "office").reduce((sum, r) => sum + r.amount, 0);
+    const pendingCount = records.filter(r => r.status === "pending").length;
+
+    document.getElementById("statTotalToday").textContent = formatINR(totalToday);
+    document.getElementById("statBankDeposits").textContent = formatINR(bankTotal);
+    document.getElementById("statOfficeHandovers").textContent = formatINR(officeTotal);
+    document.getElementById("statPendingDeposits").textContent = pendingCount;
+  }
+
+  // View record modal
+  const viewModalEl = document.getElementById("viewRecordModal");
+  const viewModal = new bootstrap.Modal(viewModalEl);
+  const viewRecordBody = document.getElementById("viewRecordBody");
+
+  tbody.addEventListener("click", (e) => {
+    const btn = e.target.closest(".view-record-btn");
+    if (!btn) return;
+    const r = records[Number(btn.dataset.idx)];
+    viewRecordBody.innerHTML = `
+      <dl class="row mb-0 small">
+        <dt class="col-5">Date</dt><dd class="col-7 mono">${r.date}</dd>
+        <dt class="col-5">Retailer</dt><dd class="col-7">${r.retailer}</dd>
+        <dt class="col-5">Amount</dt><dd class="col-7 amount-cell">₹${formatINR(r.amount)}</dd>
+        <dt class="col-5">Handover Type</dt><dd class="col-7">${r.type === "bank" ? "Bank Deposit" : r.type === "office" ? "Office Accounts" : "—"}</dd>
+        <dt class="col-5">Bank / Accounts</dt><dd class="col-7">${r.party}</dd>
+        <dt class="col-5">Status</dt><dd class="col-7">${statusBadge[r.status] || statusBadge.draft}</dd>
+      </dl>`;
+    viewModal.show();
+  });
+
+  // Initial render
+  renderTable();
+  renderSummary();
+
+})();
+</script>
+</body>
+</html>
