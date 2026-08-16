@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Company-wise Date-wise Balance Report</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root{
+    --ink:#1c2430; --sub:#5b6674; --line:#e3e7ed; --bg:#f6f8fb;
+    --accent:#2f6fed; --pos:#177245; --neg:#b3261e; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:var(--bg); color:var(--ink);
+  }
+  header{
+    padding:28px 32px 20px; background:var(--card); border-bottom:1px solid var(--line);
+  }
+  h1{margin:0 0 4px; font-size:22px;}
+  p.sub{margin:0; color:var(--sub); font-size:14px;}
+  .wrap{max-width:1100px; margin:0 auto; padding:24px 20px 60px;}
+
+  .upload-box{
+    background:var(--card); border:1.5px dashed #c6cedb; border-radius:12px;
+    padding:28px; text-align:center; margin-bottom:24px;
+  }
+  .upload-box.drag{border-color:var(--accent); background:#eef3ff;}
+  .upload-box input{display:none;}
+  .btn{
+    display:inline-block; background:var(--accent); color:#fff; border:none;
+    padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600;
+    cursor:pointer; margin-top:10px;
+  }
+  .btn:hover{background:#2559c9;}
+  .btn.secondary{background:#fff; color:var(--accent); border:1px solid var(--accent);}
+  .hint{color:var(--sub); font-size:12.5px; margin-top:8px;}
+
+  .config{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    padding:18px 20px; margin-bottom:20px; display:none;
+  }
+  .config.show{display:block;}
+  .config-row{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;}
+  .field{display:flex; flex-direction:column; gap:5px; min-width:150px;}
+  .field label{font-size:12px; color:var(--sub); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
+  select{
+    padding:8px 10px; border:1px solid var(--line); border-radius:7px; font-size:13.5px; background:#fff;
+  }
+  .field.mode select{min-width:170px;}
+
+  .summary-bar{
+    display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px;
+  }
+  .stat{
+    background:var(--card); border:1px solid var(--line); border-radius:10px;
+    padding:14px 18px; min-width:150px; flex:1;
+  }
+  .stat .num{font-size:20px; font-weight:700;}
+  .stat .lbl{font-size:12px; color:var(--sub); margin-top:2px;}
+
+  .company-card{
+    background:var(--card); border:1px solid var(--line); border-radius:12px;
+    margin-bottom:18px; overflow:hidden;
+  }
+  .company-head{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:14px 18px; background:#fafbfd; border-bottom:1px solid var(--line);
+    cursor:pointer;
+  }
+  .company-head h3{margin:0; font-size:15.5px;}
+  .company-head .totals{display:flex; gap:18px; font-size:13px; align-items:center;}
+  .company-head .totals .final{font-weight:700; font-size:15px;}
+  .chev{transition:transform .15s; color:var(--sub);}
+  .company-card.collapsed .chev{transform:rotate(-90deg);}
+  .company-card.collapsed table{display:none;}
+
+  table{width:100%; border-collapse:collapse; font-size:13.5px;}
+  th, td{padding:9px 18px; text-align:right; border-bottom:1px solid var(--line);}
+  th:first-child, td:first-child{text-align:left;}
+  th{
+    background:#fcfcfd; color:var(--sub); font-weight:600; font-size:11.5px;
+    text-transform:uppercase; letter-spacing:.03em; position:sticky; top:0;
+  }
+  tr:last-child td{border-bottom:none;}
+  td.pos{color:var(--pos);}
+  td.neg{color:var(--neg);}
+  tr.grand td{font-weight:700; background:#f7f9fc; border-top:2px solid var(--line);}
+
+  .empty{color:var(--sub); font-size:14px; text-align:center; padding:40px 0;}
+  .error{
+    background:#fdecec; border:1px solid #f3c2c0; color:var(--neg);
+    padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:16px; display:none;
+  }
+  .error.show{display:block;}
+
+  input[type=text].search{
+    padding:8px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px; width:220px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap" style="padding:0;">
+    <h1>Company-wise Balance Report</h1>
+    <p class="sub">Upload your Excel file to get date-wise running balance and totals for each company.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="upload-box" id="uploadBox">
+    <div style="font-size:15px; font-weight:600;">Drop your Excel file here, or click to browse</div>
+    <div class="hint">Accepts .xlsx / .xls / .csv — needs columns for Company, Date, Credit, Debit (names can vary, you'll confirm next)</div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+    <br>
+    <button class="btn" id="browseBtn">Choose File</button>
+    <div class="hint" id="fileName"></div>
+  </div>
+
+  <div class="error" id="errorBox"></div>
+
+  <div class="config" id="configBox">
+    <div class="config-row">
+      <div class="field">
+        <label>Company column</label>
+        <select id="colCompany"></select>
+      </div>
+      <div class="field">
+        <label>Date column</label>
+        <select id="colDate"></select>
+      </div>
+      <div class="field">
+        <label>Credit column</label>
+        <select id="colCredit"></select>
+      </div>
+      <div class="field">
+        <label>Debit column</label>
+        <select id="colDebit"></select>
+      </div>
+      <div class="field mode">
+        <label>Balance shown per date</label>
+        <select id="balMode">
+          <option value="running">Running balance (cumulative)</option>
+          <option value="daily">Day's net only (credit − debit)</option>
+        </select>
+      </div>
+      <div>
+        <button class="btn" id="processBtn">Generate Report</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resultsArea"></div>
+
+</div>
+
+<script>
+let workbookData = null; // array of row objects
+let headers = [];
+
+const uploadBox = document.getElementById('uploadBox');
+const fileInput = document.getElementById('fileInput');
+const browseBtn = document.getElementById('browseBtn');
+const fileName = document.getElementById('fileName');
+const errorBox = document.getElementById('errorBox');
+const configBox = document.getElementById('configBox');
+const resultsArea = document.getElementById('resultsArea');
+
+browseBtn.addEventListener('click', () => fileInput.click());
+uploadBox.addEventListener('click', (e) => { if(e.target === uploadBox) fileInput.click(); });
+
+['dragover','dragenter'].forEach(evt => uploadBox.addEventListener(evt, e => {
+  e.preventDefault(); uploadBox.classList.add('drag');
+}));
+['dragleave','drop'].forEach(evt => uploadBox.addEventListener(evt, e => {
+  e.preventDefault(); uploadBox.classList.remove('drag');
+}));
+uploadBox.addEventListener('drop', e => {
+  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => {
+  if(e.target.files.length) handleFile(e.target.files[0]);
+});
+
+function showError(msg){
+  errorBox.textContent = msg;
+  errorBox.classList.add('show');
+}
+function clearError(){
+  errorBox.classList.remove('show');
+  errorBox.textContent = '';
+}
+
+function handleFile(file){
+  clearError();
+  resultsArea.innerHTML = '';
+  fileName.textContent = 'Loaded: ' + file.name;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array', cellDates:true});
+      const sheetName = wb.SheetNames[0];
+      const sheet = wb.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
+      if(!json.length){
+        showError('No data rows found in the first sheet ("' + sheetName + '").');
+        return;
+      }
+      workbookData = json;
+      headers = Object.keys(json[0]);
+      populateColumnSelectors();
+      configBox.classList.add('show');
+    }catch(err){
+      showError('Could not read this file: ' + err.message);
+    }
+  };
+  reader.onerror = function(){
+    showError('Failed to read the file.');
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function guessColumn(candidates){
+  const lower = headers.map(h => h.toLowerCase());
+  for(const c of candidates){
+    const idx = lower.findIndex(h => h.includes(c));
+    if(idx !== -1) return headers[idx];
+  }
+  return headers[0];
+}
+
+function populateColumnSelectors(){
+  const selects = {
+    colCompany: document.getElementById('colCompany'),
+    colDate: document.getElementById('colDate'),
+    colCredit: document.getElementById('colCredit'),
+    colDebit: document.getElementById('colDebit'),
+  };
+  for(const key in selects){
+    selects[key].innerHTML = headers.map(h => `<option value="${h}">${h}</option>`).join('');
+  }
+  selects.colCompany.value = guessColumn(['company','client','vendor','name','party']);
+  selects.colDate.value = guessColumn(['date']);
+  selects.colCredit.value = guessColumn(['credit','cr']);
+  selects.colDebit.value = guessColumn(['debit','dr']);
+}
+
+document.getElementById('processBtn').addEventListener('click', generateReport);
+
+function parseNumber(v){
+  if(v === '' || v === null || v === undefined) return 0;
+  if(typeof v === 'number') return v;
+  const cleaned = String(v).replace(/[₹$,\s]/g,'');
+  const n = parseFloat(cleaned);
+  return isNaN(n) ? 0 : n;
+}
+
+function parseDate(v){
+  if(v instanceof Date && !isNaN(v)) return v;
+  if(typeof v === 'number'){
+    // excel serial date fallback
+    const d = XLSX.SSF.parse_date_code(v);
+    if(d) return new Date(d.y, d.m-1, d.d);
+  }
+  const s = String(v).trim();
+  // try common formats
+  let d = new Date(s);
+  if(!isNaN(d)) return d;
+  const parts = s.split(/[\/\-\.]/);
+  if(parts.length === 3){
+    // try dd/mm/yyyy
+    let [a,b,c] = parts.map(p=>parseInt(p,10));
+    if(c < 100) c += 2000;
+    d = new Date(c, b-1, a);
+    if(!isNaN(d)) return d;
+  }
+  return null;
+}
+
+function formatDate(d){
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const yyyy = d.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
+}
+
+function formatMoney(n){
+  const sign = n < 0 ? '-' : '';
+  const abs = Math.abs(n).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return sign + abs;
+}
+
+function generateReport(){
+  clearError();
+  const companyCol = document.getElementById('colCompany').value;
+  const dateCol = document.getElementById('colDate').value;
+  const creditCol = document.getElementById('colCredit').value;
+  const debitCol = document.getElementById('colDebit').value;
+  const mode = document.getElementById('balMode').value;
+
+  if(!workbookData || !workbookData.length){
+    showError('No data loaded.');
+    return;
+  }
+
+  // group rows by company, then by date (summing multiple entries same day)
+  const byCompany = {};
+  let skipped = 0;
+
+  workbookData.forEach(row => {
+    const company = String(row[companyCol] ?? '').trim() || '(Unspecified)';
+    const dateVal = parseDate(row[dateCol]);
+    if(!dateVal){ skipped++; return; }
+    const credit = parseNumber(row[creditCol]);
+    const debit = parseNumber(row[debitCol]);
+    const dayKey = formatDate(dateVal);
+
+    if(!byCompany[company]) byCompany[company] = {};
+    if(!byCompany[company][dayKey]) byCompany[company][dayKey] = {date:dateVal, credit:0, debit:0};
+    byCompany[company][dayKey].credit += credit;
+    byCompany[company][dayKey].debit += debit;
+  });
+
+  const companyNames = Object.keys(byCompany).sort();
+  if(!companyNames.length){
+    showError('No valid dated rows could be parsed. Check your column selections.');
+    return;
+  }
+
+  let html = '';
+  let grandTotal = 0;
+
+  // summary bar placeholder, filled after computing totals
+  const companyFinalTotals = [];
+
+  companyNames.forEach(company => {
+    const days = Object.values(byCompany[company]).sort((a,b) => a.date - b.date);
+    let running = 0;
+    let rowsHtml = '';
+    days.forEach(d => {
+      const net = d.credit - d.debit;
+      running += net;
+      const shown = mode === 'running' ? running : net;
+      const cls = shown < 0 ? 'neg' : 'pos';
+      rowsHtml += `<tr>
+        <td>${formatDate(d.date)}</td>
+        <td>${formatMoney(d.credit)}</td>
+        <td>${formatMoney(d.debit)}</td>
+        <td class="${cls}">${formatMoney(shown)}</td>
+      </tr>`;
+    });
+    const finalBalance = running;
+    grandTotal += finalBalance;
+    companyFinalTotals.push({company, finalBalance});
+    const finalCls = finalBalance < 0 ? 'neg' : 'pos';
+
+    html += `
+    <div class="company-card">
+      <div class="company-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <h3>${company}</h3>
+        <div class="totals">
+          <span>${days.length} date${days.length>1?'s':''}</span>
+          <span class="final ${finalCls}">Balance: ${formatMoney(finalBalance)}</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Credit</th><th>Debit</th><th>${mode==='running'?'Running Balance':"Day's Net"}</th></tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+          <tr class="grand"><td>Final Balance</td><td></td><td></td><td class="${finalCls}">${formatMoney(finalBalance)}</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+  });
+
+  const grandCls = grandTotal < 0 ? 'neg' : 'pos';
+  const summaryHtml = `
+    <div class="summary-bar">
+      <div class="stat"><div class="num">${companyNames.length}</div><div class="lbl">Companies</div></div>
+      <div class="stat"><div class="num">${workbookData.length - skipped}</div><div class="lbl">Rows processed${skipped ? ' ('+skipped+' skipped)' : ''}</div></div>
+      <div class="stat"><div class="num ${grandCls}">${formatMoney(grandTotal)}</div><div class="lbl">Grand Total Balance (all companies)</div></div>
+    </div>`;
+
+  resultsArea.innerHTML = summaryHtml + html;
+}
+</script>
+
+</body>
+</html>
