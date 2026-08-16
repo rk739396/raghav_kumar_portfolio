@@ -1,18 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
 <meta charset="UTF-8">
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Debit Credit Pending Balance Calculator</title>
+<title>Debit & Credit Balance Calculator</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
 <style>
-
 * {
     box-sizing: border-box;
 }
@@ -20,29 +16,30 @@
 body {
     margin: 0;
     font-family: Arial, Helvetica, sans-serif;
-    background: #f4f6f9;
+    background: #f3f4f6;
     color: #1f2937;
 }
 
 .container {
-    max-width: 1200px;
-    margin: 30px auto;
-    padding: 20px;
+    max-width: 1400px;
+    margin: 25px auto;
+    padding: 15px;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 8px;
+    margin-bottom: 5px;
 }
 
 .subtitle {
     text-align: center;
-    color: #64748b;
+    color: #6b7280;
     margin-bottom: 30px;
 }
 
-
-/* UPLOAD */
+/* =========================
+   UPLOAD SECTION
+========================= */
 
 .upload-section {
     display: grid;
@@ -50,104 +47,176 @@ h1 {
     gap: 20px;
 }
 
-.card {
+.upload-card {
     background: white;
-    padding: 25px;
+    padding: 22px;
     border-radius: 12px;
     box-shadow: 0 3px 12px rgba(0,0,0,0.08);
 }
 
-.card h2 {
+.upload-card h2 {
     margin-top: 0;
 }
 
-input[type="file"] {
+.file-input {
     width: 100%;
     padding: 12px;
     border: 2px dashed #cbd5e1;
     border-radius: 8px;
     background: #f8fafc;
+    cursor: pointer;
 }
 
-.info {
+.columns {
     margin-top: 15px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
     font-size: 14px;
-    color: #64748b;
-    line-height: 1.7;
+    line-height: 1.8;
 }
 
 .formula {
     margin-top: 15px;
     padding: 12px;
-    background: #eff6ff;
     border-left: 4px solid #2563eb;
-    border-radius: 5px;
+    background: #eff6ff;
     color: #1e40af;
+    border-radius: 5px;
 }
 
-
-/* BUTTONS */
+/* =========================
+   BUTTONS
+========================= */
 
 .buttons {
-    margin: 25px 0;
     text-align: center;
+    margin: 25px 0;
 }
 
 button {
     border: none;
     padding: 12px 22px;
     margin: 5px;
-    border-radius: 8px;
+    border-radius: 7px;
     color: white;
     font-weight: bold;
     cursor: pointer;
     font-size: 15px;
 }
 
-.calculate {
+.calculate-btn {
     background: #2563eb;
 }
 
-.reset {
+.calculate-btn:hover {
+    background: #1d4ed8;
+}
+
+.reset-btn {
     background: #64748b;
 }
 
-.download {
+.reset-btn:hover {
+    background: #475569;
+}
+
+.download-btn {
     background: #16a34a;
 }
 
+.download-btn:hover {
+    background: #15803d;
+}
 
-/* MESSAGE */
+/* =========================
+   MESSAGE
+========================= */
 
 .message {
     display: none;
     padding: 12px;
+    border-radius: 7px;
     margin-bottom: 20px;
-    border-radius: 8px;
     text-align: center;
     font-weight: bold;
 }
 
-.success {
+.message.success {
     display: block;
     background: #dcfce7;
     color: #166534;
 }
 
-.error {
+.message.error {
     display: block;
     background: #fee2e2;
     color: #991b1b;
 }
 
+/* =========================
+   FILE PREVIEW
+========================= */
 
-/* SUMMARY */
+.preview-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.preview-card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+}
+
+.preview-card h2 {
+    margin-top: 0;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+
+th {
+    background: #1e293b;
+    color: white;
+    padding: 10px;
+    text-align: left;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+}
+
+td {
+    padding: 9px;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+}
+
+tr:hover td {
+    background: #f8fafc;
+}
+
+/* =========================
+   SUMMARY
+========================= */
 
 .summary {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 15px;
-    margin-bottom: 25px;
+    margin: 25px 0;
 }
 
 .summary-card {
@@ -157,73 +226,72 @@ button {
     box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
 
-.summary-card .title {
-    font-size: 14px;
+.summary-title {
     color: #64748b;
+    font-size: 14px;
 }
 
-.summary-card .amount {
-    font-size: 24px;
+.summary-value {
+    margin-top: 7px;
+    font-size: 25px;
     font-weight: bold;
-    margin-top: 8px;
 }
 
-.debit-color {
+.debit {
     color: #2563eb;
 }
 
-.credit-color {
+.credit {
     color: #16a34a;
 }
 
-.pending-color {
+.pending {
     color: #dc2626;
 }
 
+/* =========================
+   RESULT
+========================= */
 
-/* TABLE */
-
-.table-container {
-    overflow-x: auto;
+.result-section {
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    min-width: 850px;
+.result-section h2 {
+    margin-top: 0;
 }
 
-thead th {
-    background: #1e293b;
-    color: white;
-    padding: 13px;
-    text-align: right;
-    white-space: nowrap;
+.result-wrapper {
+    overflow-x: auto;
+    max-height: 600px;
+    overflow-y: auto;
 }
 
-thead th:first-child,
-thead th:nth-child(2),
-thead th:nth-child(3) {
-    text-align: left;
+.result-table {
+    min-width: 900px;
 }
 
-tbody td {
-    padding: 12px;
-    border-bottom: 1px solid #e5e7eb;
+.result-table th {
     text-align: right;
 }
 
-tbody td:first-child,
-tbody td:nth-child(2),
-tbody td:nth-child(3) {
+.result-table th:nth-child(1),
+.result-table th:nth-child(2),
+.result-table th:nth-child(3) {
     text-align: left;
 }
 
-tbody tr:hover {
-    background: #f8fafc;
+.result-table td {
+    text-align: right;
+}
+
+.result-table td:nth-child(1),
+.result-table td:nth-child(2),
+.result-table td:nth-child(3) {
+    text-align: left;
 }
 
 .pending-cell {
@@ -232,77 +300,63 @@ tbody tr:hover {
 }
 
 tfoot td {
-    background: #f1f5f9;
+    background: #e5e7eb;
     font-weight: bold;
-    padding: 13px;
-    text-align: right;
 }
 
-tfoot td:first-child {
-    text-align: left;
-}
+/* =========================
+   RESPONSIVE
+========================= */
 
-
-/* MOBILE */
-
-@media (max-width: 800px) {
+@media (max-width: 900px) {
 
     .upload-section,
+    .preview-section {
+        grid-template-columns: 1fr;
+    }
+
     .summary {
         grid-template-columns: 1fr;
     }
 
-    .container {
-        padding: 12px;
-    }
-
 }
-
 </style>
 
 </head>
 
-
 <body>
-
 
 <div class="container">
 
+<h1>Debit & Credit Pending Balance Calculator</h1>
 
-<h1>
-    Debit & Credit Pending Balance Calculator
-</h1>
-
-
-<p class="subtitle">
-    Mobile-wise Debit Topup and Credit Payment Balance
-</p>
-
+<div class="subtitle">
+    Mobile-wise calculation using separate Debit and Credit files
+</div>
 
 
 <!-- =====================================================
-     FILE UPLOAD
+     UPLOAD FILES
 ===================================================== -->
 
 <div class="upload-section">
 
+    <!-- ================= DEBIT FILE ================= -->
 
-    <!-- DEBIT FILE -->
-
-    <div class="card">
+    <div class="upload-card">
 
         <h2>📥 Debit File</h2>
 
         <input
             type="file"
             id="debitFile"
+            class="file-input"
             accept=".xlsx,.xls,.csv"
         >
 
+        <div class="columns">
 
-        <div class="info">
-
-            <b>Required columns:</b>
+            <strong>Required columns:</strong>
 
             <br>
 
@@ -330,33 +384,35 @@ tfoot td:first-child {
 
         </div>
 
-
         <div class="formula">
 
-            <b>Debit Topup = OB + DR</b>
+            <strong>Debit Topup = OB + DR</strong>
+
+            <br>
+
+            Mobile number is the unique key.
 
         </div>
 
     </div>
 
 
+    <!-- ================= CREDIT FILE ================= -->
 
-    <!-- CREDIT FILE -->
-
-    <div class="card">
+    <div class="upload-card">
 
         <h2>📤 Credit File</h2>
 
         <input
             type="file"
             id="creditFile"
+            class="file-input"
             accept=".xlsx,.xls,.csv"
         >
 
+        <div class="columns">
 
-        <div class="info">
-
-            <b>Required columns:</b>
+            <strong>Required columns:</strong>
 
             <br>
 
@@ -380,22 +436,19 @@ tfoot td:first-child {
 
         </div>
 
-
         <div class="formula">
 
-            <b>All Credit Payments are counted.</b>
+            <strong>All credit payments are counted.</strong>
 
             <br>
 
-            Payment Mode is not used for calculation.
+            Payment mode does NOT affect the calculation.
 
         </div>
 
     </div>
 
-
 </div>
-
 
 
 <!-- =====================================================
@@ -404,40 +457,86 @@ tfoot td:first-child {
 
 <div class="buttons">
 
-
     <button
-        class="calculate"
+        class="calculate-btn"
         onclick="calculateBalance()"
     >
         Calculate Balance
     </button>
 
-
     <button
-        class="reset"
-        onclick="resetData()"
+        class="reset-btn"
+        onclick="resetAll()"
     >
         Reset
     </button>
 
-
     <button
-        class="download"
+        class="download-btn"
         onclick="downloadResult()"
     >
         Download Result
     </button>
 
-
 </div>
 
 
+<!-- MESSAGE -->
 
 <div
     id="message"
     class="message"
 ></div>
 
+
+<!-- =====================================================
+     FILE PREVIEWS
+===================================================== -->
+
+<div class="preview-section">
+
+    <!-- DEBIT PREVIEW -->
+
+    <div class="preview-card">
+
+        <h2>Debit File Data</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead id="debitPreviewHead"></thead>
+
+                <tbody id="debitPreviewBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+
+    <!-- CREDIT PREVIEW -->
+
+    <div class="preview-card">
+
+        <h2>Credit File Data</h2>
+
+        <div class="table-wrapper">
+
+            <table>
+
+                <thead id="creditPreviewHead"></thead>
+
+                <tbody id="creditPreviewBody"></tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+
+</div>
 
 
 <!-- =====================================================
@@ -446,16 +545,15 @@ tfoot td:first-child {
 
 <div class="summary">
 
-
     <div class="summary-card">
 
-        <div class="title">
+        <div class="summary-title">
             Total Debit Topup
         </div>
 
         <div
-            class="amount debit-color"
             id="totalDebit"
+            class="summary-value debit"
         >
             ₹0
         </div>
@@ -463,180 +561,122 @@ tfoot td:first-child {
     </div>
 
 
-
     <div class="summary-card">
 
-        <div class="title">
+        <div class="summary-title">
             Total Credit Payment
         </div>
 
         <div
-            class="amount credit-color"
             id="totalCredit"
+            class="summary-value credit"
         >
             ₹0
         </div>
 
     </div>
-
 
 
     <div class="summary-card">
 
-        <div class="title">
-            Pending Balance
+        <div class="summary-title">
+            Total Pending Balance
         </div>
 
         <div
-            class="amount pending-color"
             id="totalPending"
+            class="summary-value pending"
         >
             ₹0
         </div>
 
     </div>
 
-
 </div>
-
 
 
 <!-- =====================================================
-     RESULT TABLE
+     FINAL RESULT
 ===================================================== -->
 
-<div class="table-container">
+<div class="result-section">
 
+    <h2>📊 Mobile-wise Final Balance</h2>
 
-<table>
+    <div class="result-wrapper">
 
+        <table class="result-table">
 
-<thead>
+            <thead>
 
-<tr>
+                <tr>
 
-    <th>Mobile</th>
+                    <th>Mobile</th>
 
-    <th>Name</th>
+                    <th>Name</th>
 
-    <th>SHOP NAME</th>
+                    <th>SHOP NAME</th>
 
-    <th>Debit Topup</th>
+                    <th>Debit Topup</th>
 
-    <th>Credit Payment</th>
+                    <th>Credit Payment</th>
 
-    <th>Pending Balance</th>
+                    <th>Pending Balance</th>
 
-</tr>
+                </tr>
 
-</thead>
+            </thead>
 
+            <tbody id="resultBody"></tbody>
 
+            <tfoot>
 
-<tbody id="resultBody">
+                <tr>
 
-</tbody>
+                    <td colspan="3">
+                        TOTAL
+                    </td>
 
+                    <td id="footerDebit">
+                        ₹0
+                    </td>
 
+                    <td id="footerCredit">
+                        ₹0
+                    </td>
 
-<tfoot>
+                    <td id="footerPending">
+                        ₹0
+                    </td>
 
-<tr>
+                </tr>
 
-    <td colspan="3">
-        TOTAL
-    </td>
+            </tfoot>
 
-    <td id="footerDebit">
-        ₹0
-    </td>
+        </table>
 
-    <td id="footerCredit">
-        ₹0
-    </td>
-
-    <td id="footerPending">
-        ₹0
-    </td>
-
-</tr>
-
-</tfoot>
-
-
-</table>
-
+    </div>
 
 </div>
 
-
 </div>
-
 
 
 <script>
 
-
 /* =====================================================
-   GLOBAL DATA
+   GLOBAL VARIABLES
 ===================================================== */
 
 let finalData = [];
 
+let debitRawData = [];
+
+let creditRawData = [];
 
 
 /* =====================================================
-   NUMBER CONVERSION
-===================================================== */
-
-function numberValue(value) {
-
-    if (typeof value === "number") {
-        return value;
-    }
-
-
-    let cleaned =
-        String(value || "")
-        .replace(/₹/g, "")
-        .replace(/,/g, "")
-        .replace(/\s/g, "")
-        .trim();
-
-
-    let number =
-        parseFloat(cleaned);
-
-
-    return isNaN(number)
-        ? 0
-        : number;
-
-}
-
-
-
-/* =====================================================
-   MONEY FORMAT
-===================================================== */
-
-function money(value) {
-
-    return "₹" +
-        Number(value || 0)
-        .toLocaleString(
-            "en-IN",
-            {
-                maximumFractionDigits: 2
-            }
-        );
-
-}
-
-
-
-/* =====================================================
-   NORMALIZE
+   NORMALIZE COLUMN NAME
 ===================================================== */
 
 function normalize(value) {
@@ -649,59 +689,97 @@ function normalize(value) {
 }
 
 
-
 /* =====================================================
    FIND COLUMN
 ===================================================== */
 
-function findColumn(
-    row,
-    possibleNames
-) {
+function findColumn(row, names) {
 
-    let columns =
-        Object.keys(row);
+    const columns = Object.keys(row);
 
+    for (const name of names) {
 
-    for (
-        let name of possibleNames
-    ) {
-
-        let found =
-            columns.find(
-                column =>
-                    normalize(column)
-                    ===
-                    normalize(name)
-            );
-
+        const found = columns.find(
+            column =>
+                normalize(column) === normalize(name)
+        );
 
         if (found) {
-
             return found;
-
         }
-
     }
 
-
     return null;
+}
+
+
+/* =====================================================
+   NUMBER
+===================================================== */
+
+function numberValue(value) {
+
+    if (typeof value === "number") {
+        return value;
+    }
+
+    let cleaned =
+        String(value || "")
+        .replace(/₹/g, "")
+        .replace(/,/g, "")
+        .replace(/\s/g, "")
+        .trim();
+
+    let result = parseFloat(cleaned);
+
+    return isNaN(result) ? 0 : result;
 
 }
 
 
+/* =====================================================
+   MONEY
+===================================================== */
+
+function money(value) {
+
+    return "₹" +
+        Number(value || 0).toLocaleString(
+            "en-IN",
+            {
+                maximumFractionDigits: 2
+            }
+        );
+
+}
+
 
 /* =====================================================
-   READ FILE
+   ESCAPE HTML
+===================================================== */
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* =====================================================
+   READ EXCEL / CSV
 ===================================================== */
 
 async function readFile(file) {
 
-    let buffer =
+    const buffer =
         await file.arrayBuffer();
 
-
-    let workbook =
+    const workbook =
         XLSX.read(
             buffer,
             {
@@ -709,14 +787,11 @@ async function readFile(file) {
             }
         );
 
-
-    let sheetName =
+    const sheetName =
         workbook.SheetNames[0];
 
-
-    let sheet =
+    const sheet =
         workbook.Sheets[sheetName];
-
 
     return XLSX.utils.sheet_to_json(
         sheet,
@@ -728,17 +803,175 @@ async function readFile(file) {
 }
 
 
-
 /* =====================================================
-   READ DEBIT FILE
+   PREVIEW FILE
 ===================================================== */
 
-function readDebitRows(rows) {
+function displayPreview(
+    rows,
+    headId,
+    bodyId
+) {
+
+    const head =
+        document.getElementById(headId);
+
+    const body =
+        document.getElementById(bodyId);
+
+    head.innerHTML = "";
+    body.innerHTML = "";
+
+    if (!rows.length) {
+        return;
+    }
+
+    const columns =
+        Object.keys(rows[0]);
+
+    let headerRow =
+        document.createElement("tr");
+
+    columns.forEach(column => {
+
+        let th =
+            document.createElement("th");
+
+        th.textContent =
+            column;
+
+        headerRow.appendChild(th);
+
+    });
+
+    head.appendChild(headerRow);
+
+
+    rows.forEach(row => {
+
+        let tr =
+            document.createElement("tr");
+
+        columns.forEach(column => {
+
+            let td =
+                document.createElement("td");
+
+            td.textContent =
+                row[column];
+
+            tr.appendChild(td);
+
+        });
+
+        body.appendChild(tr);
+
+    });
+
+}
+
+
+/* =====================================================
+   AUTOMATIC DEBIT FILE PREVIEW
+===================================================== */
+
+document
+    .getElementById("debitFile")
+    .addEventListener(
+        "change",
+        async function() {
+
+            if (!this.files.length) {
+                return;
+            }
+
+            try {
+
+                debitRawData =
+                    await readFile(
+                        this.files[0]
+                    );
+
+                displayPreview(
+                    debitRawData,
+                    "debitPreviewHead",
+                    "debitPreviewBody"
+                );
+
+                showMessage(
+                    "Debit file loaded successfully.",
+                    "success"
+                );
+
+            }
+            catch(error) {
+
+                showMessage(
+                    "Could not read Debit file.",
+                    "error"
+                );
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   AUTOMATIC CREDIT FILE PREVIEW
+===================================================== */
+
+document
+    .getElementById("creditFile")
+    .addEventListener(
+        "change",
+        async function() {
+
+            if (!this.files.length) {
+                return;
+            }
+
+            try {
+
+                creditRawData =
+                    await readFile(
+                        this.files[0]
+                    );
+
+                displayPreview(
+                    creditRawData,
+                    "creditPreviewHead",
+                    "creditPreviewBody"
+                );
+
+                showMessage(
+                    "Credit file loaded successfully.",
+                    "success"
+                );
+
+            }
+            catch(error) {
+
+                showMessage(
+                    "Could not read Credit file.",
+                    "error"
+                );
+
+            }
+
+        }
+    );
+
+
+/* =====================================================
+   PARSE DEBIT DATA
+===================================================== */
+
+function parseDebitRows(rows) {
 
     return rows.map(row => {
 
-
-        let mobileColumn =
+        const mobileColumn =
             findColumn(
                 row,
                 [
@@ -748,8 +981,7 @@ function readDebitRows(rows) {
                 ]
             );
 
-
-        let nameColumn =
+        const nameColumn =
             findColumn(
                 row,
                 [
@@ -757,8 +989,7 @@ function readDebitRows(rows) {
                 ]
             );
 
-
-        let shopColumn =
+        const shopColumn =
             findColumn(
                 row,
                 [
@@ -767,8 +998,7 @@ function readDebitRows(rows) {
                 ]
             );
 
-
-        let obColumn =
+        const obColumn =
             findColumn(
                 row,
                 [
@@ -776,8 +1006,7 @@ function readDebitRows(rows) {
                 ]
             );
 
-
-        let drColumn =
+        const drColumn =
             findColumn(
                 row,
                 [
@@ -786,31 +1015,27 @@ function readDebitRows(rows) {
             );
 
 
-        let mobile =
+        const mobile =
             String(
                 row[mobileColumn] || ""
             ).trim();
 
-
-        let name =
+        const name =
             String(
                 row[nameColumn] || ""
             ).trim();
 
-
-        let shop =
+        const shop =
             String(
                 row[shopColumn] || ""
             ).trim();
 
-
-        let ob =
+        const ob =
             numberValue(
                 row[obColumn]
             );
 
-
-        let dr =
+        const dr =
             numberValue(
                 row[drColumn]
             );
@@ -818,22 +1043,20 @@ function readDebitRows(rows) {
 
         /*
             DEBIT TOPUP
-            = OB + DR
+
+            OB + DR
         */
 
-        let debit =
+        const debit =
             ob + dr;
 
 
         return {
 
-            mobile: mobile,
-
-            name: name,
-
-            shop: shop,
-
-            debit: debit
+            mobile,
+            name,
+            shop,
+            debit
 
         };
 
@@ -842,17 +1065,15 @@ function readDebitRows(rows) {
 }
 
 
-
 /* =====================================================
-   READ CREDIT FILE
+   PARSE CREDIT DATA
 ===================================================== */
 
-function readCreditRows(rows) {
+function parseCreditRows(rows) {
 
     return rows.map(row => {
 
-
-        let mobileColumn =
+        const mobileColumn =
             findColumn(
                 row,
                 [
@@ -862,8 +1083,7 @@ function readCreditRows(rows) {
                 ]
             );
 
-
-        let nameColumn =
+        const nameColumn =
             findColumn(
                 row,
                 [
@@ -871,8 +1091,7 @@ function readCreditRows(rows) {
                 ]
             );
 
-
-        let shopColumn =
+        const shopColumn =
             findColumn(
                 row,
                 [
@@ -881,14 +1100,7 @@ function readCreditRows(rows) {
                 ]
             );
 
-
-        /*
-            CREDIT AMOUNT
-
-            TOTAL CREDIT PAYMENT
-        */
-
-        let paymentColumn =
+        const paymentColumn =
             findColumn(
                 row,
                 [
@@ -899,45 +1111,45 @@ function readCreditRows(rows) {
             );
 
 
-        let mobile =
+        const mobile =
             String(
                 row[mobileColumn] || ""
             ).trim();
 
-
-        let name =
+        const name =
             String(
                 row[nameColumn] || ""
             ).trim();
 
-
-        let shop =
+        const shop =
             String(
                 row[shopColumn] || ""
             ).trim();
 
-
-        let payment =
+        const credit =
             numberValue(
                 row[paymentColumn]
             );
 
 
         /*
-            PAYMENT MODE IS NOT USED.
+            PAYMENT MODE IS COMPLETELY IGNORED.
 
-            Every credit payment is counted.
+            CASH       -> COUNT
+            MTD        -> COUNT
+            REVERSED   -> COUNT
+            UPI        -> COUNT
+            BANK       -> COUNT
+            ANYTHING   -> COUNT
         */
+
 
         return {
 
-            mobile: mobile,
-
-            name: name,
-
-            shop: shop,
-
-            credit: payment
+            mobile,
+            name,
+            shop,
+            credit
 
         };
 
@@ -946,33 +1158,39 @@ function readCreditRows(rows) {
 }
 
 
-
 /* =====================================================
-   CALCULATE
+   CALCULATE BALANCE
 ===================================================== */
 
 async function calculateBalance() {
 
-
-    let debitFile =
+    const debitFile =
         document.getElementById(
             "debitFile"
         ).files[0];
 
-
-    let creditFile =
+    const creditFile =
         document.getElementById(
             "creditFile"
         ).files[0];
 
 
-    if (
-        !debitFile ||
-        !creditFile
-    ) {
+    if (!debitFile) {
 
         showMessage(
-            "Please upload both Debit and Credit files.",
+            "Please upload the Debit file.",
+            "error"
+        );
+
+        return;
+
+    }
+
+
+    if (!creditFile) {
+
+        showMessage(
+            "Please upload the Credit file.",
             "error"
         );
 
@@ -983,18 +1201,16 @@ async function calculateBalance() {
 
     try {
 
-
         /*
             READ FILES
         */
 
-        let debitRaw =
+        const debitRaw =
             await readFile(
                 debitFile
             );
 
-
-        let creditRaw =
+        const creditRaw =
             await readFile(
                 creditFile
             );
@@ -1004,55 +1220,58 @@ async function calculateBalance() {
             PARSE
         */
 
-        let debitRows =
-            readDebitRows(
+        const debitRows =
+            parseDebitRows(
                 debitRaw
             );
 
-
-        let creditRows =
-            readCreditRows(
+        const creditRows =
+            parseCreditRows(
                 creditRaw
             );
 
 
         /*
-            MOBILE IS UNIQUE
+            MOBILE NUMBER IS UNIQUE.
+
+            This Map ensures:
+
+            9999999999
+            9999999999
+            9999999999
+
+            becomes ONE account.
         */
 
-        let accounts =
+        const accounts =
             new Map();
 
 
-        function getAccount(data) {
+        /*
+            CREATE / GET ACCOUNT
+        */
+
+        function getAccount(row) {
+
+            const mobile =
+                row.mobile;
 
 
-            let key =
-                data.mobile;
-
-
-            if (
-                !accounts.has(key)
-            ) {
+            if (!accounts.has(mobile)) {
 
                 accounts.set(
-                    key,
+                    mobile,
                     {
 
-                        mobile:
-                            data.mobile,
+                        mobile: mobile,
 
-                        name:
-                            data.name,
+                        name: row.name,
 
-                        shop:
-                            data.shop,
+                        shop: row.shop,
 
-                        debit:
-                            0,
+                        debit: 0,
 
-                        credit:
-                            0
+                        credit: 0
 
                     }
                 );
@@ -1060,103 +1279,73 @@ async function calculateBalance() {
             }
 
 
-            return accounts.get(key);
+            return accounts.get(mobile);
 
         }
 
 
+        /* =========================
+           ADD DEBIT
+        ========================= */
 
-        /*
-            ADD DEBIT
-        */
+        debitRows.forEach(row => {
 
-        debitRows.forEach(
-            row => {
-
-
-                if (
-                    !row.mobile
-                ) {
-
-                    return;
-
-                }
-
-
-                let account =
-                    getAccount(
-                        row
-                    );
-
-
-                account.debit +=
-                    row.debit;
-
+            if (!row.mobile) {
+                return;
             }
-        );
+
+            const account =
+                getAccount(row);
+
+            account.debit +=
+                row.debit;
+
+        });
 
 
+        /* =========================
+           ADD CREDIT
+        ========================= */
 
-        /*
-            ADD CREDIT
-        */
+        creditRows.forEach(row => {
 
-        creditRows.forEach(
-            row => {
-
-
-                if (
-                    !row.mobile
-                ) {
-
-                    return;
-
-                }
-
-
-                let account =
-                    getAccount(
-                        row
-                    );
-
-
-                account.credit +=
-                    row.credit;
-
+            if (!row.mobile) {
+                return;
             }
-        );
 
+            const account =
+                getAccount(row);
+
+            account.credit +=
+                row.credit;
+
+        });
 
 
         /*
-            PENDING
+            FINAL FORMULA
 
-            Debit Topup
-            -
-            Credit Payment
+            Pending =
+            Debit Topup - Credit Payment
         */
 
         finalData =
             Array.from(
                 accounts.values()
-            )
-            .map(
-                account => {
+            ).map(account => {
 
-                    return {
+                return {
 
-                        ...account,
+                    ...account,
 
-                        pending:
-                            account.debit
-                            -
-                            account.credit
+                    pending:
+                        account.debit
+                        -
+                        account.credit
 
-                    };
+                };
 
-                }
-            );
-
+            });
 
 
         /*
@@ -1183,14 +1372,13 @@ async function calculateBalance() {
             "success"
         );
 
-
     }
-    catch (error) {
+    catch(error) {
 
         console.error(error);
 
         showMessage(
-            "Unable to read the files. Please check the column names and file format.",
+            "Error reading files. Please check the column names.",
             "error"
         );
 
@@ -1199,19 +1387,16 @@ async function calculateBalance() {
 }
 
 
-
 /* =====================================================
    DISPLAY RESULTS
 ===================================================== */
 
 function displayResults() {
 
-
-    let body =
+    const body =
         document.getElementById(
             "resultBody"
         );
-
 
     body.innerHTML = "";
 
@@ -1223,78 +1408,54 @@ function displayResults() {
     let totalPending = 0;
 
 
+    finalData.forEach(row => {
 
-    finalData.forEach(
-        row => {
+        totalDebit +=
+            row.debit;
 
+        totalCredit +=
+            row.credit;
 
-            totalDebit +=
-                row.debit;
-
-
-            totalCredit +=
-                row.credit;
-
-
-            totalPending +=
-                row.pending;
+        totalPending +=
+            row.pending;
 
 
-
-            let tr =
-                document.createElement(
-                    "tr"
-                );
+        const tr =
+            document.createElement("tr");
 
 
-            tr.innerHTML = `
+        tr.innerHTML = `
 
-                <td>
-                    ${escapeHTML(
-                        row.mobile
-                    )}
-                </td>
+            <td>
+                ${escapeHTML(row.mobile)}
+            </td>
 
-                <td>
-                    ${escapeHTML(
-                        row.name
-                    )}
-                </td>
+            <td>
+                ${escapeHTML(row.name)}
+            </td>
 
-                <td>
-                    ${escapeHTML(
-                        row.shop
-                    )}
-                </td>
+            <td>
+                ${escapeHTML(row.shop)}
+            </td>
 
-                <td>
-                    ${money(
-                        row.debit
-                    )}
-                </td>
+            <td>
+                ${money(row.debit)}
+            </td>
 
-                <td>
-                    ${money(
-                        row.credit
-                    )}
-                </td>
+            <td>
+                ${money(row.credit)}
+            </td>
 
-                <td class="pending-cell">
-                    ${money(
-                        row.pending
-                    )}
-                </td>
+            <td class="pending-cell">
+                ${money(row.pending)}
+            </td>
 
-            `;
+        `;
 
 
-            body.appendChild(
-                tr
-            );
+        body.appendChild(tr);
 
-        }
-    );
-
+    });
 
 
     /*
@@ -1304,26 +1465,19 @@ function displayResults() {
     document.getElementById(
         "totalDebit"
     ).textContent =
-        money(
-            totalDebit
-        );
+        money(totalDebit);
 
 
     document.getElementById(
         "totalCredit"
     ).textContent =
-        money(
-            totalCredit
-        );
+        money(totalCredit);
 
 
     document.getElementById(
         "totalPending"
     ).textContent =
-        money(
-            totalPending
-        );
-
+        money(totalPending);
 
 
     /*
@@ -1333,62 +1487,21 @@ function displayResults() {
     document.getElementById(
         "footerDebit"
     ).textContent =
-        money(
-            totalDebit
-        );
+        money(totalDebit);
 
 
     document.getElementById(
         "footerCredit"
     ).textContent =
-        money(
-            totalCredit
-        );
+        money(totalCredit);
 
 
     document.getElementById(
         "footerPending"
     ).textContent =
-        money(
-            totalPending
-        );
+        money(totalPending);
 
 }
-
-
-
-/* =====================================================
-   ESCAPE HTML
-===================================================== */
-
-function escapeHTML(value) {
-
-    return String(
-        value || ""
-    )
-    .replace(
-        /&/g,
-        "&amp;"
-    )
-    .replace(
-        /</g,
-        "&lt;"
-    )
-    .replace(
-        />/g,
-        "&gt;"
-    )
-    .replace(
-        /"/g,
-        "&quot;"
-    )
-    .replace(
-        /'/g,
-        "&#039;"
-    );
-
-}
-
 
 
 /* =====================================================
@@ -1397,10 +1510,7 @@ function escapeHTML(value) {
 
 function downloadResult() {
 
-
-    if (
-        !finalData.length
-    ) {
+    if (!finalData.length) {
 
         alert(
             "Please calculate the balance first."
@@ -1411,7 +1521,7 @@ function downloadResult() {
     }
 
 
-    let output = [
+    const output = [
 
         [
             "Mobile",
@@ -1432,46 +1542,39 @@ function downloadResult() {
     let totalPending = 0;
 
 
+    finalData.forEach(row => {
 
-    finalData.forEach(
-        row => {
+        output.push([
 
+            row.mobile,
 
-            output.push([
+            row.name,
 
-                row.mobile,
+            row.shop,
 
-                row.name,
+            row.debit,
 
-                row.shop,
+            row.credit,
 
-                row.debit,
+            row.pending
 
-                row.credit,
-
-                row.pending
-
-            ]);
+        ]);
 
 
-            totalDebit +=
-                row.debit;
+        totalDebit +=
+            row.debit;
 
+        totalCredit +=
+            row.credit;
 
-            totalCredit +=
-                row.credit;
+        totalPending +=
+            row.pending;
 
-
-            totalPending +=
-                row.pending;
-
-        }
-    );
-
+    });
 
 
     /*
-        TOTAL
+        TOTAL ROW
     */
 
     output.push([
@@ -1491,18 +1594,17 @@ function downloadResult() {
     ]);
 
 
-
     /*
         CREATE EXCEL
     */
 
-    let worksheet =
+    const worksheet =
         XLSX.utils.aoa_to_sheet(
             output
         );
 
 
-    let workbook =
+    const workbook =
         XLSX.utils.book_new();
 
 
@@ -1521,22 +1623,43 @@ function downloadResult() {
 }
 
 
-
 /* =====================================================
    RESET
 ===================================================== */
 
-function resetData() {
-
+function resetAll() {
 
     document.getElementById(
         "debitFile"
     ).value = "";
 
-
     document.getElementById(
         "creditFile"
     ).value = "";
+
+
+    debitRawData = [];
+
+    creditRawData = [];
+
+    finalData = [];
+
+
+    document.getElementById(
+        "debitPreviewHead"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "debitPreviewBody"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "creditPreviewHead"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "creditPreviewBody"
+    ).innerHTML = "";
 
 
     document.getElementById(
@@ -1544,72 +1667,52 @@ function resetData() {
     ).innerHTML = "";
 
 
-    finalData = [];
-
-
     document.getElementById(
         "totalDebit"
-    ).textContent =
-        "₹0";
-
+    ).textContent = "₹0";
 
     document.getElementById(
         "totalCredit"
-    ).textContent =
-        "₹0";
-
+    ).textContent = "₹0";
 
     document.getElementById(
         "totalPending"
-    ).textContent =
-        "₹0";
+    ).textContent = "₹0";
 
 
     document.getElementById(
         "footerDebit"
-    ).textContent =
-        "₹0";
-
+    ).textContent = "₹0";
 
     document.getElementById(
         "footerCredit"
-    ).textContent =
-        "₹0";
-
+    ).textContent = "₹0";
 
     document.getElementById(
         "footerPending"
-    ).textContent =
-        "₹0";
+    ).textContent = "₹0";
 
 
     document.getElementById(
         "message"
-    ).className =
-        "message";
+    ).className = "message";
 
 }
-
 
 
 /* =====================================================
    MESSAGE
 ===================================================== */
 
-function showMessage(
-    text,
-    type
-) {
+function showMessage(text, type) {
 
-    let message =
+    const message =
         document.getElementById(
             "message"
         );
 
-
     message.textContent =
         text;
-
 
     message.className =
         "message " + type;
@@ -1619,5 +1722,4 @@ function showMessage(
 </script>
 
 </body>
-
 </html>
