@@ -2,466 +2,1045 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Company-wise Date-wise Balance Report</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Debit Credit Pending Balance Calculator</title>
+
+<!-- XLSX library for Excel/CSV files -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
 <style>
-  :root{
-    --ink:#1c2430; --sub:#5b6674; --line:#e3e7ed; --bg:#f6f8fb;
-    --accent:#2f6fed; --pos:#177245; --neg:#b3261e; --card:#ffffff;
-  }
-  *{box-sizing:border-box;}
-  body{
-    margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    background:var(--bg); color:var(--ink);
-  }
-  header{
-    padding:28px 32px 20px; background:var(--card); border-bottom:1px solid var(--line);
-  }
-  h1{margin:0 0 4px; font-size:22px;}
-  p.sub{margin:0; color:var(--sub); font-size:14px;}
-  .wrap{max-width:1100px; margin:0 auto; padding:24px 20px 60px;}
+    * {
+        box-sizing: border-box;
+    }
 
-  .upload-box{
-    background:var(--card); border:1.5px dashed #c6cedb; border-radius:12px;
-    padding:28px; text-align:center; margin-bottom:24px;
-  }
-  .upload-box.drag{border-color:var(--accent); background:#eef3ff;}
-  .upload-box input{display:none;}
-  .btn{
-    display:inline-block; background:var(--accent); color:#fff; border:none;
-    padding:10px 20px; border-radius:8px; font-size:14px; font-weight:600;
-    cursor:pointer; margin-top:10px;
-  }
-  .btn:hover{background:#2559c9;}
-  .btn.secondary{background:#fff; color:var(--accent); border:1px solid var(--accent);}
-  .hint{color:var(--sub); font-size:12.5px; margin-top:8px;}
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #f4f6f9;
+        color: #1f2937;
+    }
 
-  .config{
-    background:var(--card); border:1px solid var(--line); border-radius:12px;
-    padding:18px 20px; margin-bottom:20px; display:none;
-  }
-  .config.show{display:block;}
-  .config-row{display:flex; flex-wrap:wrap; gap:14px; align-items:flex-end;}
-  .field{display:flex; flex-direction:column; gap:5px; min-width:150px;}
-  .field label{font-size:12px; color:var(--sub); font-weight:600; text-transform:uppercase; letter-spacing:.03em;}
-  select{
-    padding:8px 10px; border:1px solid var(--line); border-radius:7px; font-size:13.5px; background:#fff;
-  }
-  .field.mode select{min-width:170px;}
+    .container {
+        max-width: 1200px;
+        margin: 30px auto;
+        padding: 20px;
+    }
 
-  .summary-bar{
-    display:flex; gap:14px; flex-wrap:wrap; margin-bottom:20px;
-  }
-  .stat{
-    background:var(--card); border:1px solid var(--line); border-radius:10px;
-    padding:14px 18px; min-width:150px; flex:1;
-  }
-  .stat .num{font-size:20px; font-weight:700;}
-  .stat .lbl{font-size:12px; color:var(--sub); margin-top:2px;}
+    h1 {
+        text-align: center;
+        margin-bottom: 8px;
+        color: #111827;
+    }
 
-  .grand-heading{
-    background:linear-gradient(135deg,#1f3a8f,#2f6fed);
-    border-radius:14px; padding:22px 26px; margin-bottom:20px;
-    color:#fff; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
-  }
-  .grand-heading h2{margin:0 0 2px; font-size:16px; font-weight:600; opacity:.9; text-transform:uppercase; letter-spacing:.04em;}
-  .grand-heading .figures{display:flex; gap:28px; flex-wrap:wrap;}
-  .grand-heading .figures div{text-align:right;}
-  .grand-heading .figures .num{font-size:24px; font-weight:800;}
-  .grand-heading .figures .lbl{font-size:12px; opacity:.85; margin-top:2px;}
-  .grand-heading .figures .num.neg{color:#ffb3ae;}
-  .grand-heading .figures .num.pos{color:#c9f2d8;}
+    .subtitle {
+        text-align: center;
+        color: #6b7280;
+        margin-bottom: 30px;
+    }
 
-  .company-card{
-    background:var(--card); border:1px solid var(--line); border-radius:12px;
-    margin-bottom:18px; overflow:hidden;
-  }
-  .company-head{
-    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px 0;
-    padding:14px 18px; background:#fafbfd; border-bottom:1px solid var(--line);
-    cursor:pointer;
-  }
-  .company-head h3{margin:0; font-size:15.5px;}
-  .company-head .totals{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; align-items:center;}
-  .company-head .totals .final{font-weight:700; font-size:15px;}
-  .chev{transition:transform .15s; color:var(--sub);}
-  .company-card.collapsed .chev{transform:rotate(-90deg);}
-  .company-card.collapsed table{display:none;}
+    .upload-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
 
-  table{width:100%; border-collapse:collapse; font-size:13.5px;}
-  th, td{padding:9px 18px; text-align:right; border-bottom:1px solid var(--line);}
-  th:first-child, td:first-child{text-align:left;}
-  th{
-    background:#fcfcfd; color:var(--sub); font-weight:600; font-size:11.5px;
-    text-transform:uppercase; letter-spacing:.03em; position:sticky; top:0;
-  }
-  tr:last-child td{border-bottom:none;}
-  td.pos{color:var(--pos);}
-  td.neg{color:var(--neg);}
-  tr.grand td{font-weight:700; background:#f7f9fc; border-top:2px solid var(--line);}
+    .card {
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
 
-  .empty{color:var(--sub); font-size:14px; text-align:center; padding:40px 0;}
-  .error{
-    background:#fdecec; border:1px solid #f3c2c0; color:var(--neg);
-    padding:12px 16px; border-radius:8px; font-size:13.5px; margin-bottom:16px; display:none;
-  }
-  .error.show{display:block;}
+    .card h2 {
+        margin-top: 0;
+    }
 
-  input[type=text].search{
-    padding:8px 12px; border:1px solid var(--line); border-radius:7px; font-size:13.5px; width:220px;
-  }
+    input[type="file"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px dashed #cbd5e1;
+        border-radius: 8px;
+        background: #f8fafc;
+    }
+
+    .info {
+        margin-top: 12px;
+        font-size: 14px;
+        color: #64748b;
+        line-height: 1.6;
+    }
+
+    .buttons {
+        margin: 25px 0;
+        text-align: center;
+    }
+
+    button {
+        border: none;
+        padding: 12px 22px;
+        margin: 5px;
+        border-radius: 8px;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 15px;
+    }
+
+    .calculate {
+        background: #2563eb;
+    }
+
+    .calculate:hover {
+        background: #1d4ed8;
+    }
+
+    .reset {
+        background: #64748b;
+    }
+
+    .download {
+        background: #16a34a;
+    }
+
+    .summary {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+
+    .summary-card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+
+    .summary-card .title {
+        font-size: 14px;
+        color: #64748b;
+    }
+
+    .summary-card .amount {
+        font-size: 24px;
+        font-weight: bold;
+        margin-top: 8px;
+    }
+
+    .pending {
+        color: #dc2626;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 850px;
+    }
+
+    th {
+        background: #1e293b;
+        color: white;
+        padding: 13px;
+        text-align: right;
+    }
+
+    th:first-child,
+    th:nth-child(2),
+    th:nth-child(3) {
+        text-align: left;
+    }
+
+    td {
+        padding: 12px;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: right;
+    }
+
+    td:first-child,
+    td:nth-child(2),
+    td:nth-child(3) {
+        text-align: left;
+    }
+
+    tbody tr:hover {
+        background: #f8fafc;
+    }
+
+    tfoot td {
+        background: #f1f5f9;
+        font-weight: bold;
+    }
+
+    .message {
+        display: none;
+        padding: 12px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .success {
+        display: block;
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .error {
+        display: block;
+        background: #fee2e2;
+        color: #991b1b;
+    }
+
+    @media (max-width: 800px) {
+        .upload-section,
+        .summary {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 </head>
+
 <body>
 
-<header>
-  <div class="wrap" style="padding:0;">
-    <h1>Company-wise Balance Report</h1>
-    <p class="sub">Upload your Excel file to get date-wise running balance and totals for each company.</p>
-  </div>
-</header>
+<div class="container">
 
-<div class="wrap">
+    <h1>Debit & Credit Pending Balance Calculator</h1>
 
-  <div class="upload-box" id="uploadBox">
-    <div style="font-size:15px; font-weight:600;">Drop your Excel file here, or click to browse</div>
-    <div class="hint">Accepts .xlsx / .xls / .csv — needs columns for Company, Date, Credit, Debit (names can vary, you'll confirm next)</div>
-    <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
-    <br>
-    <button class="btn" id="browseBtn">Choose File</button>
-    <div class="hint" id="fileName"></div>
-  </div>
+    <p class="subtitle">
+        Upload Debit and Credit files to calculate shop-wise pending balance
+    </p>
 
-  <div class="error" id="errorBox"></div>
+    <!-- FILE UPLOAD -->
+    <div class="upload-section">
 
-  <div class="config" id="configBox">
-    <div class="config-row">
-      <div class="field">
-        <label>Company column</label>
-        <select id="colCompany"></select>
-      </div>
-      <div class="field">
-        <label>Date column</label>
-        <select id="colDate"></select>
-      </div>
-      <div class="field">
-        <label>Credit column</label>
-        <select id="colCredit"></select>
-      </div>
-      <div class="field">
-        <label>Debit column</label>
-        <select id="colDebit"></select>
-      </div>
-      <div>
-        <button class="btn" id="processBtn">Generate Report</button>
-      </div>
+        <!-- DEBIT FILE -->
+        <div class="card">
+            <h2>📥 Debit File</h2>
+
+            <input
+                type="file"
+                id="debitFile"
+                accept=".xlsx,.xls,.csv"
+            >
+
+            <div class="info">
+                <b>Required columns:</b><br>
+                Mobile<br>
+                Name<br>
+                SHOP NAME<br>
+                OB<br>
+                DR<br>
+                DEBIT TOPUP MODE
+                <br><br>
+
+                <b>Debit Topup = OB + DR</b>
+            </div>
+        </div>
+
+        <!-- CREDIT FILE -->
+        <div class="card">
+            <h2>📤 Credit File</h2>
+
+            <input
+                type="file"
+                id="creditFile"
+                accept=".xlsx,.xls,.csv"
+            >
+
+            <div class="info">
+                <b>Required columns:</b><br>
+                Mobile<br>
+                Name<br>
+                SHOP NAME<br>
+                OB<br>
+                DR<br>
+                DEBIT TOPUP MODE
+                <br><br>
+
+                In the Credit file, <b>DR</b> is treated as payment.
+                <br>
+                CASH and MTD = Received
+                <br>
+                REVERSED = Reversed
+            </div>
+        </div>
+
     </div>
-  </div>
 
-  <div id="resultsArea"></div>
+    <!-- BUTTONS -->
+    <div class="buttons">
+
+        <button class="calculate" onclick="calculateBalance()">
+            Calculate Balance
+        </button>
+
+        <button class="reset" onclick="resetData()">
+            Reset
+        </button>
+
+        <button class="download" onclick="downloadResult()">
+            Download Result
+        </button>
+
+    </div>
+
+    <div id="message" class="message"></div>
+
+    <!-- SUMMARY -->
+    <div class="summary">
+
+        <div class="summary-card">
+            <div class="title">Total Debit Topup</div>
+            <div class="amount" id="totalDebit">₹0</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="title">Credit Received</div>
+            <div class="amount" id="totalCredit">₹0</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="title">Reversed</div>
+            <div class="amount" id="totalReversed">₹0</div>
+        </div>
+
+        <div class="summary-card">
+            <div class="title">Pending Balance</div>
+            <div class="amount pending" id="totalPending">₹0</div>
+        </div>
+
+    </div>
+
+    <!-- RESULT TABLE -->
+    <div class="table-container">
+
+        <table id="resultTable">
+
+            <thead>
+                <tr>
+                    <th>Mobile</th>
+                    <th>Name</th>
+                    <th>SHOP NAME</th>
+                    <th>Debit Topup</th>
+                    <th>Credit Received</th>
+                    <th>Reversed</th>
+                    <th>Pending Balance</th>
+                </tr>
+            </thead>
+
+            <tbody id="resultBody"></tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="3">TOTAL</td>
+                    <td id="footerDebit">₹0</td>
+                    <td id="footerCredit">₹0</td>
+                    <td id="footerReversed">₹0</td>
+                    <td id="footerPending">₹0</td>
+                </tr>
+            </tfoot>
+
+        </table>
+
+    </div>
 
 </div>
 
+
 <script>
-let workbookData = null; // array of row objects
-let headers = [];
 
-const uploadBox = document.getElementById('uploadBox');
-const fileInput = document.getElementById('fileInput');
-const browseBtn = document.getElementById('browseBtn');
-const fileName = document.getElementById('fileName');
-const errorBox = document.getElementById('errorBox');
-const configBox = document.getElementById('configBox');
-const resultsArea = document.getElementById('resultsArea');
+let finalData = [];
 
-browseBtn.addEventListener('click', () => fileInput.click());
-uploadBox.addEventListener('click', (e) => { if(e.target === uploadBox) fileInput.click(); });
 
-['dragover','dragenter'].forEach(evt => uploadBox.addEventListener(evt, e => {
-  e.preventDefault(); uploadBox.classList.add('drag');
-}));
-['dragleave','drop'].forEach(evt => uploadBox.addEventListener(evt, e => {
-  e.preventDefault(); uploadBox.classList.remove('drag');
-}));
-uploadBox.addEventListener('drop', e => {
-  if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-});
-fileInput.addEventListener('change', e => {
-  if(e.target.files.length) handleFile(e.target.files[0]);
-});
+/* ================================
+   NUMBER FORMAT
+================================ */
 
-function showError(msg){
-  errorBox.textContent = msg;
-  errorBox.classList.add('show');
-}
-function clearError(){
-  errorBox.classList.remove('show');
-  errorBox.textContent = '';
-}
+function numberValue(value) {
 
-function handleFile(file){
-  clearError();
-  resultsArea.innerHTML = '';
-  fileName.textContent = 'Loaded: ' + file.name;
-  const reader = new FileReader();
-  reader.onload = function(e){
-    try{
-      const data = new Uint8Array(e.target.result);
-      const wb = XLSX.read(data, {type:'array', cellDates:true});
-      const sheetName = wb.SheetNames[0];
-      const sheet = wb.Sheets[sheetName];
-      const json = XLSX.utils.sheet_to_json(sheet, {defval:''});
-      if(!json.length){
-        showError('No data rows found in the first sheet ("' + sheetName + '").');
-        return;
-      }
-      workbookData = json;
-      headers = Object.keys(json[0]);
-      populateColumnSelectors();
-      configBox.classList.add('show');
-    }catch(err){
-      showError('Could not read this file: ' + err.message);
+    if (typeof value === "number") {
+        return value;
     }
-  };
-  reader.onerror = function(){
-    showError('Failed to read the file.');
-  };
-  reader.readAsArrayBuffer(file);
+
+    let cleaned = String(value || "")
+        .replace(/₹/g, "")
+        .replace(/,/g, "")
+        .trim();
+
+    let number = parseFloat(cleaned);
+
+    return isNaN(number) ? 0 : number;
 }
 
-function guessColumn(candidates){
-  const lower = headers.map(h => h.toLowerCase());
-  for(const c of candidates){
-    const idx = lower.findIndex(h => h.includes(c));
-    if(idx !== -1) return headers[idx];
-  }
-  return headers[0];
-}
 
-function populateColumnSelectors(){
-  const selects = {
-    colCompany: document.getElementById('colCompany'),
-    colDate: document.getElementById('colDate'),
-    colCredit: document.getElementById('colCredit'),
-    colDebit: document.getElementById('colDebit'),
-  };
-  for(const key in selects){
-    selects[key].innerHTML = headers.map(h => `<option value="${h}">${h}</option>`).join('');
-  }
-  selects.colCompany.value = guessColumn(['company','client','vendor','name','party']);
-  selects.colDate.value = guessColumn(['date']);
-  selects.colCredit.value = guessColumn(['credit','cr']);
-  selects.colDebit.value = guessColumn(['debit','dr']);
-}
+/* ================================
+   MONEY FORMAT
+================================ */
 
-document.getElementById('processBtn').addEventListener('click', generateReport);
+function money(value) {
 
-function parseNumber(v){
-  if(v === '' || v === null || v === undefined) return 0;
-  if(typeof v === 'number') return v;
-  const cleaned = String(v).replace(/[₹$,\s]/g,'');
-  const n = parseFloat(cleaned);
-  return isNaN(n) ? 0 : n;
-}
-
-function parseDate(v){
-  if(v instanceof Date && !isNaN(v)) return v;
-  if(typeof v === 'number'){
-    // excel serial date fallback
-    const d = XLSX.SSF.parse_date_code(v);
-    if(d) return new Date(d.y, d.m-1, d.d);
-  }
-  const s = String(v).trim();
-  // try common formats
-  let d = new Date(s);
-  if(!isNaN(d)) return d;
-  const parts = s.split(/[\/\-\.]/);
-  if(parts.length === 3){
-    // try dd/mm/yyyy
-    let [a,b,c] = parts.map(p=>parseInt(p,10));
-    if(c < 100) c += 2000;
-    d = new Date(c, b-1, a);
-    if(!isNaN(d)) return d;
-  }
-  return null;
-}
-
-function formatDate(d){
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  const yyyy = d.getFullYear();
-  return `${dd}-${mm}-${yyyy}`;
-}
-
-function formatMoney(n){
-  const sign = n < 0 ? '-' : '';
-  const abs = Math.abs(n).toLocaleString('en-IN', {minimumFractionDigits:2, maximumFractionDigits:2});
-  return sign + abs;
-}
-
-function generateReport(){
-  clearError();
-  const companyCol = document.getElementById('colCompany').value;
-  const dateCol = document.getElementById('colDate').value;
-  const creditCol = document.getElementById('colCredit').value;
-  const debitCol = document.getElementById('colDebit').value;
-
-  if(!workbookData || !workbookData.length){
-    showError('No data loaded.');
-    return;
-  }
-
-  // group rows by company, then by date (summing multiple entries same day)
-  const byCompany = {};
-  const byDateAll = {}; // aggregated across ALL companies, per date
-  let skipped = 0;
-
-  workbookData.forEach(row => {
-    const company = String(row[companyCol] ?? '').trim() || '(Unspecified)';
-    const dateVal = parseDate(row[dateCol]);
-    if(!dateVal){ skipped++; return; }
-    const credit = parseNumber(row[creditCol]);
-    const debit = parseNumber(row[debitCol]);
-    const dayKey = formatDate(dateVal);
-
-    if(!byCompany[company]) byCompany[company] = {};
-    if(!byCompany[company][dayKey]) byCompany[company][dayKey] = {date:dateVal, credit:0, debit:0};
-    byCompany[company][dayKey].credit += credit;
-    byCompany[company][dayKey].debit += debit;
-
-    if(!byDateAll[dayKey]) byDateAll[dayKey] = {date:dateVal, credit:0, debit:0, companies:new Set()};
-    byDateAll[dayKey].credit += credit;
-    byDateAll[dayKey].debit += debit;
-    byDateAll[dayKey].companies.add(company);
-  });
-
-  const companyNames = Object.keys(byCompany).sort();
-  if(!companyNames.length){
-    showError('No valid dated rows could be parsed. Check your column selections.');
-    return;
-  }
-
-  let html = '';
-  let grandTotal = 0;
-  let grandCredit = 0;
-  let grandDebit = 0;
-
-  companyNames.forEach(company => {
-    const days = Object.values(byCompany[company]).sort((a,b) => a.date - b.date);
-    let running = 0;
-    let totalCredit = 0;
-    let totalDebit = 0;
-    let rowsHtml = '';
-    days.forEach(d => {
-      const net = d.credit - d.debit;
-      running += net;
-      totalCredit += d.credit;
-      totalDebit += d.debit;
-      const netCls = net < 0 ? 'neg' : 'pos';
-      const runCls = running < 0 ? 'neg' : 'pos';
-      rowsHtml += `<tr>
-        <td>${formatDate(d.date)}</td>
-        <td>${formatMoney(d.credit)}</td>
-        <td>${formatMoney(d.debit)}</td>
-        <td class="${netCls}">${formatMoney(net)}</td>
-        <td class="${runCls}">${formatMoney(running)}</td>
-      </tr>`;
+    return "₹" + Number(value || 0).toLocaleString("en-IN", {
+        maximumFractionDigits: 2
     });
-    const finalBalance = running;
-    grandTotal += finalBalance;
-    grandCredit += totalCredit;
-    grandDebit += totalDebit;
-    const finalCls = finalBalance < 0 ? 'neg' : 'pos';
 
-    html += `
-    <div class="company-card">
-      <div class="company-head" onclick="this.parentElement.classList.toggle('collapsed')">
-        <h3>${company}</h3>
-        <div class="totals">
-          <span>${days.length} date${days.length>1?'s':''}</span>
-          <span>Total Credit: ${formatMoney(totalCredit)}</span>
-          <span>Total Debit: ${formatMoney(totalDebit)}</span>
-          <span class="final ${finalCls}">Balance: ${formatMoney(finalBalance)}</span>
-          <span class="chev">▾</span>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr><th>Date</th><th>Credit</th><th>Debit</th><th>Total</th><th>Running Balance</th></tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-          <tr class="grand"><td>Total / Final Balance</td><td>${formatMoney(totalCredit)}</td><td>${formatMoney(totalDebit)}</td><td class="${finalCls}">${formatMoney(finalBalance)}</td><td class="${finalCls}">${formatMoney(finalBalance)}</td></tr>
-        </tbody>
-      </table>
-    </div>`;
-  });
-
-  const grandCls = grandTotal < 0 ? 'neg' : 'pos';
-
-  const grandHeadingHtml = `
-    <div class="grand-heading">
-      <h2>Grand Total — All Companies, All Dates</h2>
-      <div class="figures">
-        <div><div class="num pos">${formatMoney(grandCredit)}</div><div class="lbl">Total Credit</div></div>
-        <div><div class="num neg">${formatMoney(grandDebit)}</div><div class="lbl">Total Debit</div></div>
-        <div><div class="num ${grandCls}">${formatMoney(grandTotal)}</div><div class="lbl">Total Balance</div></div>
-      </div>
-    </div>`;
-
-  const summaryHtml = `
-    <div class="summary-bar">
-      <div class="stat"><div class="num">${companyNames.length}</div><div class="lbl">Companies</div></div>
-      <div class="stat"><div class="num">${workbookData.length - skipped}</div><div class="lbl">Rows processed${skipped ? ' ('+skipped+' skipped)' : ''}</div></div>
-      <div class="stat"><div class="num pos">${formatMoney(grandCredit)}</div><div class="lbl">Total Credit (all companies)</div></div>
-      <div class="stat"><div class="num neg">${formatMoney(grandDebit)}</div><div class="lbl">Total Debit (all companies)</div></div>
-      <div class="stat"><div class="num ${grandCls}">${formatMoney(grandTotal)}</div><div class="lbl">Grand Total Balance (all companies)</div></div>
-    </div>`;
-
-  // Build date-wise totals table (across all companies)
-  const allDates = Object.values(byDateAll).sort((a,b) => a.date - b.date);
-  let dateRunning = 0;
-  let dateRowsHtml = '';
-  allDates.forEach(d => {
-    const net = d.credit - d.debit;
-    dateRunning += net;
-    const netCls = net < 0 ? 'neg' : 'pos';
-    const runCls = dateRunning < 0 ? 'neg' : 'pos';
-    dateRowsHtml += `<tr>
-      <td>${formatDate(d.date)}</td>
-      <td>${d.companies.size}</td>
-      <td>${formatMoney(d.credit)}</td>
-      <td>${formatMoney(d.debit)}</td>
-      <td class="${netCls}">${formatMoney(net)}</td>
-      <td class="${runCls}">${formatMoney(dateRunning)}</td>
-    </tr>`;
-  });
-  const dateGrandCls = grandTotal < 0 ? 'neg' : 'pos';
-  const dateWiseHtml = `
-    <div class="company-card" id="dateWiseCard">
-      <div class="company-head" onclick="this.parentElement.classList.toggle('collapsed')">
-        <h3>Date-wise Totals (All Companies)</h3>
-        <div class="totals">
-          <span>${allDates.length} date${allDates.length>1?'s':''}</span>
-          <span>Total Credit: ${formatMoney(grandCredit)}</span>
-          <span>Total Debit: ${formatMoney(grandDebit)}</span>
-          <span class="final ${dateGrandCls}">Balance: ${formatMoney(grandTotal)}</span>
-          <span class="chev">▾</span>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr><th>Date</th><th>Companies</th><th>Credit</th><th>Debit</th><th>Total</th><th>Running Balance</th></tr>
-        </thead>
-        <tbody>
-          ${dateRowsHtml}
-          <tr class="grand"><td>Total / Final Balance</td><td></td><td>${formatMoney(grandCredit)}</td><td>${formatMoney(grandDebit)}</td><td class="${dateGrandCls}">${formatMoney(grandTotal)}</td><td class="${dateGrandCls}">${formatMoney(grandTotal)}</td></tr>
-        </tbody>
-      </table>
-    </div>`;
-
-  resultsArea.innerHTML = grandHeadingHtml + summaryHtml + dateWiseHtml + html;
 }
+
+
+/* ================================
+   NORMALIZE COLUMN NAME
+================================ */
+
+function normalize(value) {
+
+    return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+
+}
+
+
+/* ================================
+   FIND COLUMN
+================================ */
+
+function findColumn(row, possibleNames) {
+
+    let columns = Object.keys(row);
+
+    for (let name of possibleNames) {
+
+        let found = columns.find(
+            column => normalize(column) === normalize(name)
+        );
+
+        if (found) {
+            return found;
+        }
+
+    }
+
+    return null;
+}
+
+
+/* ================================
+   READ EXCEL / CSV
+================================ */
+
+async function readFile(file) {
+
+    let buffer = await file.arrayBuffer();
+
+    let workbook = XLSX.read(buffer, {
+        type: "array"
+    });
+
+    let sheetName = workbook.SheetNames[0];
+
+    let sheet = workbook.Sheets[sheetName];
+
+    return XLSX.utils.sheet_to_json(sheet, {
+        defval: ""
+    });
+
+}
+
+
+/* ================================
+   READ DEBIT FILE
+================================ */
+
+function readDebitRows(rows) {
+
+    return rows.map(row => {
+
+        let mobileColumn = findColumn(row, [
+            "Mobile",
+            "Mobile No",
+            "Mobile Number"
+        ]);
+
+        let nameColumn = findColumn(row, [
+            "Name"
+        ]);
+
+        let shopColumn = findColumn(row, [
+            "SHOP NAME",
+            "Shop Name"
+        ]);
+
+        let obColumn = findColumn(row, [
+            "OB"
+        ]);
+
+        let drColumn = findColumn(row, [
+            "DR"
+        ]);
+
+        return {
+
+            mobile: String(row[mobileColumn] || "").trim(),
+
+            name: String(row[nameColumn] || "").trim(),
+
+            shop: String(row[shopColumn] || "").trim(),
+
+            /*
+             DEBIT TOPUP = OB + DR
+            */
+
+            debit:
+                numberValue(row[obColumn]) +
+                numberValue(row[drColumn])
+
+        };
+
+    });
+
+}
+
+
+/* ================================
+   READ CREDIT FILE
+================================ */
+
+function readCreditRows(rows) {
+
+    return rows.map(row => {
+
+        let mobileColumn = findColumn(row, [
+            "Mobile",
+            "Mobile No",
+            "Mobile Number"
+        ]);
+
+        let nameColumn = findColumn(row, [
+            "Name"
+        ]);
+
+        let shopColumn = findColumn(row, [
+            "SHOP NAME",
+            "Shop Name"
+        ]);
+
+        let drColumn = findColumn(row, [
+            "DR"
+        ]);
+
+        let modeColumn = findColumn(row, [
+            "DEBIT TOPUP MODE",
+            "MODE",
+            "PAYMENT MODE",
+            "RECEIVED PAYMENT MODE"
+        ]);
+
+        let amount = numberValue(row[drColumn]);
+
+        let mode = normalize(row[modeColumn]);
+
+
+        /*
+           CASH + MTD = RECEIVED
+
+           REVERSED = REVERSED
+        */
+
+        let credit = 0;
+
+        let reversed = 0;
+
+        if (mode === "reversed") {
+
+            reversed = amount;
+
+        } else {
+
+            credit = amount;
+
+        }
+
+
+        return {
+
+            mobile: String(row[mobileColumn] || "").trim(),
+
+            name: String(row[nameColumn] || "").trim(),
+
+            shop: String(row[shopColumn] || "").trim(),
+
+            credit: credit,
+
+            reversed: reversed
+
+        };
+
+    });
+
+}
+
+
+/* ================================
+   CALCULATE BALANCE
+================================ */
+
+async function calculateBalance() {
+
+    let debitFile =
+        document.getElementById("debitFile").files[0];
+
+    let creditFile =
+        document.getElementById("creditFile").files[0];
+
+
+    if (!debitFile || !creditFile) {
+
+        showMessage(
+            "Please upload both Debit and Credit files.",
+            "error"
+        );
+
+        return;
+    }
+
+
+    try {
+
+        let debitRaw =
+            await readFile(debitFile);
+
+        let creditRaw =
+            await readFile(creditFile);
+
+
+        let debitRows =
+            readDebitRows(debitRaw);
+
+        let creditRows =
+            readCreditRows(creditRaw);
+
+
+        /*
+          Group using Mobile + SHOP NAME
+        */
+
+        let accounts = new Map();
+
+
+        function getAccount(data) {
+
+            let key =
+                data.mobile +
+                "|" +
+                normalize(data.shop);
+
+
+            if (!accounts.has(key)) {
+
+                accounts.set(key, {
+
+                    mobile: data.mobile,
+
+                    name: data.name,
+
+                    shop: data.shop,
+
+                    debit: 0,
+
+                    credit: 0,
+
+                    reversed: 0
+
+                });
+
+            }
+
+            return accounts.get(key);
+
+        }
+
+
+        /* DEBIT */
+
+        debitRows.forEach(row => {
+
+            let account =
+                getAccount(row);
+
+            account.debit += row.debit;
+
+        });
+
+
+        /* CREDIT */
+
+        creditRows.forEach(row => {
+
+            let account =
+                getAccount(row);
+
+            account.credit += row.credit;
+
+            account.reversed += row.reversed;
+
+        });
+
+
+        /*
+          FINAL FORMULA:
+
+          Pending =
+          Debit Topup
+          - Credit Received
+          - Reversed
+        */
+
+        finalData =
+            Array.from(accounts.values()).map(account => {
+
+                return {
+
+                    ...account,
+
+                    pending:
+                        account.debit -
+                        account.credit -
+                        account.reversed
+
+                };
+
+            });
+
+
+        displayResults();
+
+        showMessage(
+            "Calculation completed successfully.",
+            "success"
+        );
+
+
+    } catch (error) {
+
+        console.error(error);
+
+        showMessage(
+            "Unable to read the files. Please check the file format and column names.",
+            "error"
+        );
+
+    }
+
+}
+
+
+/* ================================
+   DISPLAY RESULTS
+================================ */
+
+function displayResults() {
+
+    let body =
+        document.getElementById("resultBody");
+
+    body.innerHTML = "";
+
+
+    let totalDebit = 0;
+
+    let totalCredit = 0;
+
+    let totalReversed = 0;
+
+    let totalPending = 0;
+
+
+    finalData.forEach(row => {
+
+        totalDebit += row.debit;
+
+        totalCredit += row.credit;
+
+        totalReversed += row.reversed;
+
+        totalPending += row.pending;
+
+
+        let tr =
+            document.createElement("tr");
+
+
+        tr.innerHTML = `
+
+            <td>${escapeHTML(row.mobile)}</td>
+
+            <td>${escapeHTML(row.name)}</td>
+
+            <td>${escapeHTML(row.shop)}</td>
+
+            <td>${money(row.debit)}</td>
+
+            <td>${money(row.credit)}</td>
+
+            <td>${money(row.reversed)}</td>
+
+            <td class="pending">
+                ${money(row.pending)}
+            </td>
+
+        `;
+
+
+        body.appendChild(tr);
+
+    });
+
+
+    /*
+       SUMMARY
+    */
+
+    document.getElementById("totalDebit").textContent =
+        money(totalDebit);
+
+    document.getElementById("totalCredit").textContent =
+        money(totalCredit);
+
+    document.getElementById("totalReversed").textContent =
+        money(totalReversed);
+
+    document.getElementById("totalPending").textContent =
+        money(totalPending);
+
+
+    /*
+       FOOTER
+    */
+
+    document.getElementById("footerDebit").textContent =
+        money(totalDebit);
+
+    document.getElementById("footerCredit").textContent =
+        money(totalCredit);
+
+    document.getElementById("footerReversed").textContent =
+        money(totalReversed);
+
+    document.getElementById("footerPending").textContent =
+        money(totalPending);
+
+}
+
+
+/* ================================
+   ESCAPE HTML
+================================ */
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+
+/* ================================
+   DOWNLOAD RESULT
+================================ */
+
+function downloadResult() {
+
+    if (!finalData.length) {
+
+        alert("Please calculate the balance first.");
+
+        return;
+
+    }
+
+
+    let output = [
+
+        [
+            "Mobile",
+            "Name",
+            "SHOP NAME",
+            "DEBIT TOPUP",
+            "CREDIT RECEIVED",
+            "REVERSED",
+            "PENDING BALANCE"
+        ]
+
+    ];
+
+
+    finalData.forEach(row => {
+
+        output.push([
+
+            row.mobile,
+
+            row.name,
+
+            row.shop,
+
+            row.debit,
+
+            row.credit,
+
+            row.reversed,
+
+            row.pending
+
+        ]);
+
+    });
+
+
+    /*
+       Add TOTAL row
+    */
+
+    let totalDebit = 0;
+
+    let totalCredit = 0;
+
+    let totalReversed = 0;
+
+    let totalPending = 0;
+
+
+    finalData.forEach(row => {
+
+        totalDebit += row.debit;
+
+        totalCredit += row.credit;
+
+        totalReversed += row.reversed;
+
+        totalPending += row.pending;
+
+    });
+
+
+    output.push([
+
+        "",
+
+        "",
+
+        "TOTAL",
+
+        totalDebit,
+
+        totalCredit,
+
+        totalReversed,
+
+        totalPending
+
+    ]);
+
+
+    let worksheet =
+        XLSX.utils.aoa_to_sheet(output);
+
+
+    let workbook =
+        XLSX.utils.book_new();
+
+
+    XLSX.utils.book_append_sheet(
+        workbook,
+        worksheet,
+        "Balance"
+    );
+
+
+    XLSX.writeFile(
+        workbook,
+        "Debit_Credit_Pending_Balance.xlsx"
+    );
+
+}
+
+
+/* ================================
+   RESET
+================================ */
+
+function resetData() {
+
+    document.getElementById("debitFile").value = "";
+
+    document.getElementById("creditFile").value = "";
+
+    document.getElementById("resultBody").innerHTML = "";
+
+
+    finalData = [];
+
+
+    document.getElementById("totalDebit").textContent =
+        "₹0";
+
+    document.getElementById("totalCredit").textContent =
+        "₹0";
+
+    document.getElementById("totalReversed").textContent =
+        "₹0";
+
+    document.getElementById("totalPending").textContent =
+        "₹0";
+
+
+    document.getElementById("footerDebit").textContent =
+        "₹0";
+
+    document.getElementById("footerCredit").textContent =
+        "₹0";
+
+    document.getElementById("footerReversed").textContent =
+        "₹0";
+
+    document.getElementById("footerPending").textContent =
+        "₹0";
+
+
+    document.getElementById("message").className =
+        "message";
+
+}
+
+
+/* ================================
+   MESSAGE
+================================ */
+
+function showMessage(text, type) {
+
+    let message =
+        document.getElementById("message");
+
+    message.textContent = text;
+
+    message.className =
+        "message " + type;
+
+}
+
 </script>
 
 </body>
