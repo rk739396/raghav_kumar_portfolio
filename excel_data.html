@@ -1,22 +1,27 @@
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Debit & Credit Pending Balance Calculator</title>
+<title>Debit Credit Pending Balance Calculator</title>
 
+<!-- Excel / CSV Library -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+
 <style>
+
 * {
     box-sizing: border-box;
 }
 
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     background: #f4f6f9;
     color: #1f2937;
 }
@@ -30,6 +35,7 @@ body {
 h1 {
     text-align: center;
     margin-bottom: 8px;
+    color: #111827;
 }
 
 .subtitle {
@@ -37,6 +43,11 @@ h1 {
     color: #64748b;
     margin-bottom: 30px;
 }
+
+
+/* ================================
+   UPLOAD CARDS
+================================ */
 
 .upload-section {
     display: grid;
@@ -53,6 +64,7 @@ h1 {
 
 .card h2 {
     margin-top: 0;
+    color: #111827;
 }
 
 input[type="file"] {
@@ -61,6 +73,7 @@ input[type="file"] {
     border: 2px dashed #cbd5e1;
     border-radius: 8px;
     background: #f8fafc;
+    cursor: pointer;
 }
 
 .info {
@@ -77,7 +90,13 @@ input[type="file"] {
     border-left: 4px solid #2563eb;
     border-radius: 5px;
     color: #1e40af;
+    line-height: 1.6;
 }
+
+
+/* ================================
+   BUTTONS
+================================ */
 
 .buttons {
     margin: 25px 0;
@@ -107,6 +126,10 @@ button {
     background: #64748b;
 }
 
+.reset:hover {
+    background: #475569;
+}
+
 .download {
     background: #16a34a;
 }
@@ -114,6 +137,37 @@ button {
 .download:hover {
     background: #15803d;
 }
+
+
+/* ================================
+   MESSAGE
+================================ */
+
+.message {
+    display: none;
+    padding: 12px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.success {
+    display: block;
+    background: #dcfce7;
+    color: #166534;
+}
+
+.error {
+    display: block;
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+
+/* ================================
+   SUMMARY
+================================ */
 
 .summary {
     display: grid;
@@ -140,17 +194,26 @@ button {
     margin-top: 8px;
 }
 
-.pending {
-    color: #dc2626;
+.debit-color {
+    color: #2563eb;
 }
 
-.received {
+.received-color {
     color: #16a34a;
 }
 
-.reversed {
+.reversed-color {
     color: #ea580c;
 }
+
+.pending-color {
+    color: #dc2626;
+}
+
+
+/* ================================
+   TABLE
+================================ */
 
 .table-container {
     overflow-x: auto;
@@ -165,28 +228,29 @@ table {
     min-width: 950px;
 }
 
-th {
+thead th {
     background: #1e293b;
     color: white;
     padding: 13px;
     text-align: right;
+    white-space: nowrap;
 }
 
-th:first-child,
-th:nth-child(2),
-th:nth-child(3) {
+thead th:first-child,
+thead th:nth-child(2),
+thead th:nth-child(3) {
     text-align: left;
 }
 
-td {
+tbody td {
     padding: 12px;
     border-bottom: 1px solid #e5e7eb;
     text-align: right;
 }
 
-td:first-child,
-td:nth-child(2),
-td:nth-child(3) {
+tbody td:first-child,
+tbody td:nth-child(2),
+tbody td:nth-child(3) {
     text-align: left;
 }
 
@@ -197,27 +261,31 @@ tbody tr:hover {
 tfoot td {
     background: #f1f5f9;
     font-weight: bold;
+    padding: 13px;
+    text-align: right;
 }
 
-.message {
-    display: none;
-    padding: 12px;
-    margin-bottom: 20px;
-    border-radius: 8px;
-    text-align: center;
+tfoot td:first-child {
+    text-align: left;
 }
 
-.success {
-    display: block;
-    background: #dcfce7;
-    color: #166534;
+.pending-cell {
+    color: #dc2626;
+    font-weight: bold;
 }
 
-.error {
-    display: block;
-    background: #fee2e2;
-    color: #991b1b;
+.received-cell {
+    color: #16a34a;
 }
+
+.reversed-cell {
+    color: #ea580c;
+}
+
+
+/* ================================
+   RESPONSIVE
+================================ */
 
 @media (max-width: 800px) {
 
@@ -226,28 +294,42 @@ tfoot td {
         grid-template-columns: 1fr;
     }
 
+    .container {
+        padding: 12px;
+    }
+
 }
+
 </style>
+
 </head>
+
 
 <body>
 
+
 <div class="container">
 
-<h1>Debit & Credit Pending Balance Calculator</h1>
+
+<h1>
+    Debit & Credit Pending Balance Calculator
+</h1>
+
 
 <p class="subtitle">
-Upload Debit and Credit files to calculate shop-wise pending balance
+    Upload Debit and Credit files to calculate mobile-wise pending balance
 </p>
 
 
-<!-- ================================
+
+<!-- =====================================================
      FILE UPLOAD SECTION
-================================ -->
+===================================================== -->
 
 <div class="upload-section">
 
-    <!-- DEBIT FILE -->
+
+    <!-- ================= DEBIT FILE ================= -->
 
     <div class="card">
 
@@ -258,6 +340,7 @@ Upload Debit and Credit files to calculate shop-wise pending balance
             id="debitFile"
             accept=".xlsx,.xls,.csv"
         >
+
 
         <div class="info">
 
@@ -289,16 +372,22 @@ Upload Debit and Credit files to calculate shop-wise pending balance
 
         </div>
 
+
         <div class="formula">
 
             <b>Debit Topup = OB + DR</b>
+
+            <br>
+
+            Mobile number is used as the unique account.
 
         </div>
 
     </div>
 
 
-    <!-- CREDIT FILE -->
+
+    <!-- ================= CREDIT FILE ================= -->
 
     <div class="card">
 
@@ -309,6 +398,7 @@ Upload Debit and Credit files to calculate shop-wise pending balance
             id="creditFile"
             accept=".xlsx,.xls,.csv"
         >
+
 
         <div class="info">
 
@@ -336,26 +426,38 @@ Upload Debit and Credit files to calculate shop-wise pending balance
 
         </div>
 
+
         <div class="formula">
 
-            <b>CASH / MTD</b> = Received Payment
+            <b>Only REVERSED is special.</b>
 
             <br>
 
-            <b>REVERSED</b> = Reversed Payment
+            REVERSED → Reversed
+
+            <br>
+
+            Any other mode → Received
+
+            <br>
+
+            Example: CASH, MTD, UPI, BANK, ONLINE, etc.
 
         </div>
 
     </div>
 
+
 </div>
 
 
-<!-- ================================
+
+<!-- =====================================================
      BUTTONS
-================================ -->
+===================================================== -->
 
 <div class="buttons">
+
 
     <button
         class="calculate"
@@ -364,12 +466,14 @@ Upload Debit and Credit files to calculate shop-wise pending balance
         Calculate Balance
     </button>
 
+
     <button
         class="reset"
         onclick="resetData()"
     >
         Reset
     </button>
+
 
     <button
         class="download"
@@ -378,8 +482,12 @@ Upload Debit and Credit files to calculate shop-wise pending balance
         Download Result
     </button>
 
+
 </div>
 
+
+
+<!-- MESSAGE -->
 
 <div
     id="message"
@@ -387,11 +495,13 @@ Upload Debit and Credit files to calculate shop-wise pending balance
 ></div>
 
 
-<!-- ================================
+
+<!-- =====================================================
      SUMMARY
-================================ -->
+===================================================== -->
 
 <div class="summary">
+
 
     <div class="summary-card">
 
@@ -400,7 +510,7 @@ Upload Debit and Credit files to calculate shop-wise pending balance
         </div>
 
         <div
-            class="amount"
+            class="amount debit-color"
             id="totalDebit"
         >
             ₹0
@@ -409,14 +519,15 @@ Upload Debit and Credit files to calculate shop-wise pending balance
     </div>
 
 
+
     <div class="summary-card">
 
         <div class="title">
-            Credit Received
+            Total Credit Received
         </div>
 
         <div
-            class="amount received"
+            class="amount received-color"
             id="totalCredit"
         >
             ₹0
@@ -425,20 +536,22 @@ Upload Debit and Credit files to calculate shop-wise pending balance
     </div>
 
 
+
     <div class="summary-card">
 
         <div class="title">
-            Reversed
+            Total Reversed
         </div>
 
         <div
-            class="amount reversed"
+            class="amount reversed-color"
             id="totalReversed"
         >
             ₹0
         </div>
 
     </div>
+
 
 
     <div class="summary-card">
@@ -448,7 +561,7 @@ Upload Debit and Credit files to calculate shop-wise pending balance
         </div>
 
         <div
-            class="amount pending"
+            class="amount pending-color"
             id="totalPending"
         >
             ₹0
@@ -456,16 +569,20 @@ Upload Debit and Credit files to calculate shop-wise pending balance
 
     </div>
 
+
 </div>
 
 
-<!-- ================================
+
+<!-- =====================================================
      RESULT TABLE
-================================ -->
+===================================================== -->
 
 <div class="table-container">
 
+
 <table id="resultTable">
+
 
 <thead>
 
@@ -490,7 +607,11 @@ Upload Debit and Credit files to calculate shop-wise pending balance
 </thead>
 
 
-<tbody id="resultBody"></tbody>
+
+<tbody id="resultBody">
+
+</tbody>
+
 
 
 <tfoot>
@@ -521,25 +642,31 @@ Upload Debit and Credit files to calculate shop-wise pending balance
 
 </tfoot>
 
+
 </table>
 
-</div>
 
 </div>
+
+
+</div>
+
 
 
 <script>
 
-/* =========================================
+
+/* =====================================================
    GLOBAL RESULT DATA
-========================================= */
+===================================================== */
 
 let finalData = [];
 
 
-/* =========================================
-   NUMBER CONVERTER
-========================================= */
+
+/* =====================================================
+   NUMBER CONVERSION
+===================================================== */
 
 function numberValue(value) {
 
@@ -547,37 +674,46 @@ function numberValue(value) {
         return value;
     }
 
+
     let cleaned = String(value || "")
         .replace(/₹/g, "")
         .replace(/,/g, "")
         .replace(/\s/g, "")
         .trim();
 
+
     let number = parseFloat(cleaned);
 
-    return isNaN(number) ? 0 : number;
+
+    return isNaN(number)
+        ? 0
+        : number;
+
 }
 
 
-/* =========================================
+
+/* =====================================================
    MONEY FORMAT
-========================================= */
+===================================================== */
 
 function money(value) {
 
-    return "₹" + Number(value || 0).toLocaleString(
-        "en-IN",
-        {
-            maximumFractionDigits: 2
-        }
-    );
+    return "₹" +
+        Number(value || 0).toLocaleString(
+            "en-IN",
+            {
+                maximumFractionDigits: 2
+            }
+        );
 
 }
 
 
-/* =========================================
+
+/* =====================================================
    NORMALIZE TEXT
-========================================= */
+===================================================== */
 
 function normalize(value) {
 
@@ -589,52 +725,74 @@ function normalize(value) {
 }
 
 
-/* =========================================
+
+/* =====================================================
    FIND COLUMN
-========================================= */
+===================================================== */
 
-function findColumn(row, possibleNames) {
+function findColumn(
+    row,
+    possibleNames
+) {
 
-    let columns = Object.keys(row);
+    let columns =
+        Object.keys(row);
 
-    for (let name of possibleNames) {
 
-        let found = columns.find(
-            column =>
-                normalize(column) === normalize(name)
-        );
+    for (
+        let name of possibleNames
+    ) {
+
+        let found =
+            columns.find(
+                column =>
+                    normalize(column)
+                    ===
+                    normalize(name)
+            );
+
 
         if (found) {
+
             return found;
+
         }
 
     }
+
 
     return null;
 
 }
 
 
-/* =========================================
-   READ EXCEL / CSV
-========================================= */
+
+/* =====================================================
+   READ EXCEL / CSV FILE
+===================================================== */
 
 async function readFile(file) {
 
-    let buffer = await file.arrayBuffer();
+    let buffer =
+        await file.arrayBuffer();
 
-    let workbook = XLSX.read(
-        buffer,
-        {
-            type: "array"
-        }
-    );
+
+    let workbook =
+        XLSX.read(
+            buffer,
+            {
+                type: "array"
+            }
+        );
+
 
     let sheetName =
         workbook.SheetNames[0];
 
+
     let sheet =
         workbook.Sheets[sheetName];
+
 
     return XLSX.utils.sheet_to_json(
         sheet,
@@ -646,13 +804,20 @@ async function readFile(file) {
 }
 
 
-/* =========================================
+
+/* =====================================================
    READ DEBIT FILE
-========================================= */
+===================================================== */
 
 function readDebitRows(rows) {
 
+
     return rows.map(row => {
+
+
+        /*
+            FIND COLUMNS
+        */
 
         let mobileColumn =
             findColumn(
@@ -702,6 +867,29 @@ function readDebitRows(rows) {
             );
 
 
+
+        /*
+            GET VALUES
+        */
+
+        let mobile =
+            String(
+                row[mobileColumn] || ""
+            ).trim();
+
+
+        let name =
+            String(
+                row[nameColumn] || ""
+            ).trim();
+
+
+        let shop =
+            String(
+                row[shopColumn] || ""
+            ).trim();
+
+
         let ob =
             numberValue(
                 row[obColumn]
@@ -714,6 +902,7 @@ function readDebitRows(rows) {
             );
 
 
+
         /*
             DEBIT TOPUP
 
@@ -724,22 +913,17 @@ function readDebitRows(rows) {
             ob + dr;
 
 
+
         return {
 
             mobile:
-                String(
-                    row[mobileColumn] || ""
-                ).trim(),
+                mobile,
 
             name:
-                String(
-                    row[nameColumn] || ""
-                ).trim(),
+                name,
 
             shop:
-                String(
-                    row[shopColumn] || ""
-                ).trim(),
+                shop,
 
             debit:
                 debitTopup
@@ -751,13 +935,20 @@ function readDebitRows(rows) {
 }
 
 
-/* =========================================
+
+/* =====================================================
    READ CREDIT FILE
-========================================= */
+===================================================== */
 
 function readCreditRows(rows) {
 
+
     return rows.map(row => {
+
+
+        /*
+            FIND MOBILE
+        */
 
         let mobileColumn =
             findColumn(
@@ -770,6 +961,11 @@ function readCreditRows(rows) {
             );
 
 
+
+        /*
+            FIND NAME
+        */
+
         let nameColumn =
             findColumn(
                 row,
@@ -778,6 +974,11 @@ function readCreditRows(rows) {
                 ]
             );
 
+
+
+        /*
+            FIND SHOP
+        */
 
         let shopColumn =
             findColumn(
@@ -789,10 +990,11 @@ function readCreditRows(rows) {
             );
 
 
+
         /*
             IMPORTANT:
 
-            Credit file uses:
+            CREDIT FILE USES:
 
             TOTAL CREDIT PAYMENT
         */
@@ -802,15 +1004,15 @@ function readCreditRows(rows) {
                 row,
                 [
                     "TOTAL CREDIT PAYMENT",
-                    "TOTAL CREDIT PAYMENT ",
                     "TOTAL CREDIT",
                     "CREDIT PAYMENT"
                 ]
             );
 
 
+
         /*
-            Credit file uses:
+            PAYMENT MODE
 
             RECEIVED PAYMENT MODE
         */
@@ -820,11 +1022,33 @@ function readCreditRows(rows) {
                 row,
                 [
                     "RECEIVED PAYMENT MODE",
-                    "RECEIVED PAYMENT MODE ",
                     "PAYMENT MODE",
                     "MODE"
                 ]
             );
+
+
+
+        /*
+            GET VALUES
+        */
+
+        let mobile =
+            String(
+                row[mobileColumn] || ""
+            ).trim();
+
+
+        let name =
+            String(
+                row[nameColumn] || ""
+            ).trim();
+
+
+        let shop =
+            String(
+                row[shopColumn] || ""
+            ).trim();
 
 
         let payment =
@@ -839,25 +1063,42 @@ function readCreditRows(rows) {
             );
 
 
+
+        /*
+            PAYMENT LOGIC
+
+            ONLY REVERSED IS SPECIAL.
+
+            REVERSED:
+                payment is reversed
+
+            EVERYTHING ELSE:
+                payment is received
+
+            Therefore:
+
+            CASH  -> Received
+            MTD   -> Received
+            UPI   -> Received
+            BANK  -> Received
+            ONLINE -> Received
+            XYZ   -> Received
+
+            REVERSED -> Reversed
+        */
+
         let received = 0;
 
         let reversed = 0;
 
-
-        /*
-            CASH / MTD
-            = RECEIVED
-
-            REVERSED
-            = REVERSED
-        */
 
         if (mode === "reversed") {
 
             reversed =
                 payment;
 
-        } else {
+        }
+        else {
 
             received =
                 payment;
@@ -865,22 +1106,17 @@ function readCreditRows(rows) {
         }
 
 
+
         return {
 
             mobile:
-                String(
-                    row[mobileColumn] || ""
-                ).trim(),
+                mobile,
 
             name:
-                String(
-                    row[nameColumn] || ""
-                ).trim(),
+                name,
 
             shop:
-                String(
-                    row[shopColumn] || ""
-                ).trim(),
+                shop,
 
             credit:
                 received,
@@ -895,11 +1131,13 @@ function readCreditRows(rows) {
 }
 
 
-/* =========================================
+
+/* =====================================================
    CALCULATE BALANCE
-========================================= */
+===================================================== */
 
 async function calculateBalance() {
+
 
     let debitFile =
         document.getElementById(
@@ -913,7 +1151,15 @@ async function calculateBalance() {
         ).files[0];
 
 
-    if (!debitFile || !creditFile) {
+
+    /*
+        CHECK FILES
+    */
+
+    if (
+        !debitFile ||
+        !creditFile
+    ) {
 
         showMessage(
             "Please upload both Debit and Credit files.",
@@ -925,10 +1171,12 @@ async function calculateBalance() {
     }
 
 
+
     try {
 
+
         /*
-            READ BOTH FILES
+            READ FILES
         */
 
         let debitRaw =
@@ -941,6 +1189,7 @@ async function calculateBalance() {
             await readFile(
                 creditFile
             );
+
 
 
         /*
@@ -959,27 +1208,45 @@ async function calculateBalance() {
             );
 
 
-        /*
-            GROUP BY:
 
-            Mobile + SHOP NAME
+        /*
+            ACCOUNT MAP
+
+            MOBILE NUMBER IS UNIQUE
         */
 
         let accounts =
             new Map();
 
 
+
+        /*
+            GET ACCOUNT
+
+            IMPORTANT:
+
+            ONLY MOBILE IS USED
+            AS THE UNIQUE KEY.
+
+            SHOP NAME IS NOT USED
+            FOR GROUPING.
+        */
+
         function getAccount(data) {
 
+
             let key =
-                data.mobile +
-                "|" +
-                normalize(
-                    data.shop
-                );
+                data.mobile;
 
 
-            if (!accounts.has(key)) {
+
+            /*
+                CREATE ACCOUNT
+            */
+
+            if (
+                !accounts.has(key)
+            ) {
 
                 accounts.set(
                     key,
@@ -1009,80 +1276,146 @@ async function calculateBalance() {
             }
 
 
+
             return accounts.get(key);
 
         }
 
 
+
         /*
+            ========================================
             ADD DEBIT
+            ========================================
         */
 
-        debitRows.forEach(row => {
+        debitRows.forEach(
+            row => {
 
-            let account =
-                getAccount(row);
+                /*
+                    Ignore completely empty
+                    mobile rows.
+                */
 
-            account.debit +=
-                row.debit;
+                if (
+                    !row.mobile
+                ) {
+                    return;
+                }
 
-        });
+
+                let account =
+                    getAccount(
+                        row
+                    );
+
+
+                account.debit +=
+                    row.debit;
+
+            }
+        );
+
 
 
         /*
+            ========================================
             ADD CREDIT
+            ========================================
         */
 
-        creditRows.forEach(row => {
-
-            let account =
-                getAccount(row);
+        creditRows.forEach(
+            row => {
 
 
-            account.credit +=
-                row.credit;
+                /*
+                    Ignore completely empty
+                    mobile rows.
+                */
+
+                if (
+                    !row.mobile
+                ) {
+                    return;
+                }
 
 
-            account.reversed +=
-                row.reversed;
+                let account =
+                    getAccount(
+                        row
+                    );
 
-        });
+
+                account.credit +=
+                    row.credit;
+
+
+                account.reversed +=
+                    row.reversed;
+
+            }
+        );
+
 
 
         /*
-            PENDING FORMULA
+            ========================================
+            CALCULATE PENDING
+            ========================================
 
-            Debit Topup
-            -
-            Credit Received
-            -
-            Reversed
+            Pending =
+                Debit Topup
+                -
+                Credit Received
+                -
+                Reversed
         */
 
         finalData =
             Array.from(
                 accounts.values()
-            ).map(account => {
+            )
+            .map(
+                account => {
 
-                return {
 
-                    ...account,
+                    return {
 
-                    pending:
-                        account.debit -
-                        account.credit -
-                        account.reversed
+                        ...account,
 
-                };
+                        pending:
+                            account.debit
+                            -
+                            account.credit
+                            -
+                            account.reversed
 
-            });
+                    };
+
+                }
+            );
+
 
 
         /*
-            SHOW RESULT
+            SORT BY MOBILE
+        */
+
+        finalData.sort(
+            (a, b) =>
+                a.mobile.localeCompare(
+                    b.mobile
+                )
+        );
+
+
+
+        /*
+            DISPLAY
         */
 
         displayResults();
+
 
 
         showMessage(
@@ -1091,12 +1424,17 @@ async function calculateBalance() {
         );
 
 
-    } catch (error) {
+    }
+    catch (error) {
 
-        console.error(error);
+
+        console.error(
+            error
+        );
+
 
         showMessage(
-            "Unable to read the files. Please check the column names and file format.",
+            "Unable to read the files. Please check the file format and column names.",
             "error"
         );
 
@@ -1105,11 +1443,13 @@ async function calculateBalance() {
 }
 
 
-/* =========================================
+
+/* =====================================================
    DISPLAY RESULTS
-========================================= */
+===================================================== */
 
 function displayResults() {
+
 
     let body =
         document.getElementById(
@@ -1120,6 +1460,11 @@ function displayResults() {
     body.innerHTML = "";
 
 
+
+    /*
+        TOTALS
+    */
+
     let totalDebit = 0;
 
     let totalCredit = 0;
@@ -1129,63 +1474,94 @@ function displayResults() {
     let totalPending = 0;
 
 
-    finalData.forEach(row => {
 
-        totalDebit +=
-            row.debit;
+    /*
+        DISPLAY EACH MOBILE
+    */
 
-        totalCredit +=
-            row.credit;
-
-        totalReversed +=
-            row.reversed;
-
-        totalPending +=
-            row.pending;
+    finalData.forEach(
+        row => {
 
 
-        let tr =
-            document.createElement(
-                "tr"
+            totalDebit +=
+                row.debit;
+
+
+            totalCredit +=
+                row.credit;
+
+
+            totalReversed +=
+                row.reversed;
+
+
+            totalPending +=
+                row.pending;
+
+
+
+            let tr =
+                document.createElement(
+                    "tr"
+                );
+
+
+
+            tr.innerHTML = `
+
+                <td>
+                    ${escapeHTML(
+                        row.mobile
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        row.name
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        row.shop
+                    )}
+                </td>
+
+                <td>
+                    ${money(
+                        row.debit
+                    )}
+                </td>
+
+                <td class="received-cell">
+                    ${money(
+                        row.credit
+                    )}
+                </td>
+
+                <td class="reversed-cell">
+                    ${money(
+                        row.reversed
+                    )}
+                </td>
+
+                <td class="pending-cell">
+                    ${money(
+                        row.pending
+                    )}
+                </td>
+
+            `;
+
+
+
+            body.appendChild(
+                tr
             );
 
+        }
+    );
 
-        tr.innerHTML = `
-
-            <td>
-                ${escapeHTML(row.mobile)}
-            </td>
-
-            <td>
-                ${escapeHTML(row.name)}
-            </td>
-
-            <td>
-                ${escapeHTML(row.shop)}
-            </td>
-
-            <td>
-                ${money(row.debit)}
-            </td>
-
-            <td class="received">
-                ${money(row.credit)}
-            </td>
-
-            <td class="reversed">
-                ${money(row.reversed)}
-            </td>
-
-            <td class="pending">
-                ${money(row.pending)}
-            </td>
-
-        `;
-
-
-        body.appendChild(tr);
-
-    });
 
 
     /*
@@ -1195,25 +1571,34 @@ function displayResults() {
     document.getElementById(
         "totalDebit"
     ).textContent =
-        money(totalDebit);
+        money(
+            totalDebit
+        );
 
 
     document.getElementById(
         "totalCredit"
     ).textContent =
-        money(totalCredit);
+        money(
+            totalCredit
+        );
 
 
     document.getElementById(
         "totalReversed"
     ).textContent =
-        money(totalReversed);
+        money(
+            totalReversed
+        );
 
 
     document.getElementById(
         "totalPending"
     ).textContent =
-        money(totalPending);
+        money(
+            totalPending
+        );
+
 
 
     /*
@@ -1223,52 +1608,82 @@ function displayResults() {
     document.getElementById(
         "footerDebit"
     ).textContent =
-        money(totalDebit);
+        money(
+            totalDebit
+        );
 
 
     document.getElementById(
         "footerCredit"
     ).textContent =
-        money(totalCredit);
+        money(
+            totalCredit
+        );
 
 
     document.getElementById(
         "footerReversed"
     ).textContent =
-        money(totalReversed);
+        money(
+            totalReversed
+        );
 
 
     document.getElementById(
         "footerPending"
     ).textContent =
-        money(totalPending);
+        money(
+            totalPending
+        );
 
 }
 
 
-/* =========================================
+
+/* =====================================================
    ESCAPE HTML
-========================================= */
+===================================================== */
 
 function escapeHTML(value) {
 
-    return String(value || "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return String(
+        value || ""
+    )
+    .replace(
+        /&/g,
+        "&amp;"
+    )
+    .replace(
+        /</g,
+        "&lt;"
+    )
+    .replace(
+        />/g,
+        "&gt;"
+    )
+    .replace(
+        /"/g,
+        "&quot;"
+    )
+    .replace(
+        /'/g,
+        "&#039;"
+    );
 
 }
 
 
-/* =========================================
+
+/* =====================================================
    DOWNLOAD RESULT
-========================================= */
+===================================================== */
 
 function downloadResult() {
 
-    if (!finalData.length) {
+
+    if (
+        !finalData.length
+    ) {
 
         alert(
             "Please calculate the balance first."
@@ -1278,6 +1693,11 @@ function downloadResult() {
 
     }
 
+
+
+    /*
+        HEADER
+    */
 
     let output = [
 
@@ -1294,6 +1714,11 @@ function downloadResult() {
     ];
 
 
+
+    /*
+        TOTALS
+    */
+
     let totalDebit = 0;
 
     let totalCredit = 0;
@@ -1303,44 +1728,57 @@ function downloadResult() {
     let totalPending = 0;
 
 
-    finalData.forEach(row => {
 
-        output.push([
+    /*
+        ADD ROWS
+    */
 
-            row.mobile,
-
-            row.name,
-
-            row.shop,
-
-            row.debit,
-
-            row.credit,
-
-            row.reversed,
-
-            row.pending
-
-        ]);
+    finalData.forEach(
+        row => {
 
 
-        totalDebit +=
-            row.debit;
+            output.push([
 
-        totalCredit +=
-            row.credit;
+                row.mobile,
 
-        totalReversed +=
-            row.reversed;
+                row.name,
 
-        totalPending +=
-            row.pending;
+                row.shop,
 
-    });
+                row.debit,
+
+                row.credit,
+
+                row.reversed,
+
+                row.pending
+
+            ]);
+
+
+
+            totalDebit +=
+                row.debit;
+
+
+            totalCredit +=
+                row.credit;
+
+
+            totalReversed +=
+                row.reversed;
+
+
+            totalPending +=
+                row.pending;
+
+        }
+    );
+
 
 
     /*
-        TOTAL ROW
+        ADD TOTAL ROW
     */
 
     output.push([
@@ -1362,6 +1800,11 @@ function downloadResult() {
     ]);
 
 
+
+    /*
+        CREATE EXCEL SHEET
+    */
+
     let worksheet =
         XLSX.utils.aoa_to_sheet(
             output
@@ -1372,12 +1815,18 @@ function downloadResult() {
         XLSX.utils.book_new();
 
 
+
     XLSX.utils.book_append_sheet(
         workbook,
         worksheet,
         "Balance"
     );
 
+
+
+    /*
+        DOWNLOAD
+    */
 
     XLSX.writeFile(
         workbook,
@@ -1387,11 +1836,17 @@ function downloadResult() {
 }
 
 
-/* =========================================
+
+/* =====================================================
    RESET
-========================================= */
+===================================================== */
 
 function resetData() {
+
+
+    /*
+        CLEAR FILE INPUTS
+    */
 
     document.getElementById(
         "debitFile"
@@ -1403,69 +1858,105 @@ function resetData() {
     ).value = "";
 
 
+
+    /*
+        CLEAR TABLE
+    */
+
     document.getElementById(
         "resultBody"
     ).innerHTML = "";
 
 
+
+    /*
+        CLEAR DATA
+    */
+
     finalData = [];
 
 
+
+    /*
+        RESET SUMMARY
+    */
+
     document.getElementById(
         "totalDebit"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
 
     document.getElementById(
         "totalCredit"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
 
     document.getElementById(
         "totalReversed"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
 
     document.getElementById(
         "totalPending"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
+
+
+    /*
+        RESET FOOTER
+    */
 
     document.getElementById(
         "footerDebit"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
 
     document.getElementById(
         "footerCredit"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
 
     document.getElementById(
         "footerReversed"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
 
     document.getElementById(
         "footerPending"
-    ).textContent = "₹0";
+    ).textContent =
+        "₹0";
 
+
+
+    /*
+        CLEAR MESSAGE
+    */
 
     document.getElementById(
         "message"
-    ).className = "message";
+    ).className =
+        "message";
 
 }
 
 
-/* =========================================
-   MESSAGE
-========================================= */
+
+/* =====================================================
+   SHOW MESSAGE
+===================================================== */
 
 function showMessage(
     text,
     type
 ) {
+
 
     let message =
         document.getElementById(
@@ -1484,5 +1975,7 @@ function showMessage(
 
 </script>
 
+
 </body>
+
 </html>
