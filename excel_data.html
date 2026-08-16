@@ -59,17 +59,30 @@
   .stat .num{font-size:20px; font-weight:700;}
   .stat .lbl{font-size:12px; color:var(--sub); margin-top:2px;}
 
+  .grand-heading{
+    background:linear-gradient(135deg,#1f3a8f,#2f6fed);
+    border-radius:14px; padding:22px 26px; margin-bottom:20px;
+    color:#fff; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;
+  }
+  .grand-heading h2{margin:0 0 2px; font-size:16px; font-weight:600; opacity:.9; text-transform:uppercase; letter-spacing:.04em;}
+  .grand-heading .figures{display:flex; gap:28px; flex-wrap:wrap;}
+  .grand-heading .figures div{text-align:right;}
+  .grand-heading .figures .num{font-size:24px; font-weight:800;}
+  .grand-heading .figures .lbl{font-size:12px; opacity:.85; margin-top:2px;}
+  .grand-heading .figures .num.neg{color:#ffb3ae;}
+  .grand-heading .figures .num.pos{color:#c9f2d8;}
+
   .company-card{
     background:var(--card); border:1px solid var(--line); border-radius:12px;
     margin-bottom:18px; overflow:hidden;
   }
   .company-head{
-    display:flex; justify-content:space-between; align-items:center;
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px 0;
     padding:14px 18px; background:#fafbfd; border-bottom:1px solid var(--line);
     cursor:pointer;
   }
   .company-head h3{margin:0; font-size:15.5px;}
-  .company-head .totals{display:flex; gap:18px; font-size:13px; align-items:center;}
+  .company-head .totals{display:flex; gap:14px; flex-wrap:wrap; font-size:13px; align-items:center;}
   .company-head .totals .final{font-weight:700; font-size:15px;}
   .chev{transition:transform .15s; color:var(--sub);}
   .company-card.collapsed .chev{transform:rotate(-90deg);}
@@ -138,13 +151,6 @@
       <div class="field">
         <label>Debit column</label>
         <select id="colDebit"></select>
-      </div>
-      <div class="field mode">
-        <label>Balance shown per date</label>
-        <select id="balMode">
-          <option value="running">Running balance (cumulative)</option>
-          <option value="daily">Day's net only (credit − debit)</option>
-        </select>
       </div>
       <div>
         <button class="btn" id="processBtn">Generate Report</button>
@@ -299,7 +305,6 @@ function generateReport(){
   const dateCol = document.getElementById('colDate').value;
   const creditCol = document.getElementById('colCredit').value;
   const debitCol = document.getElementById('colDebit').value;
-  const mode = document.getElementById('balMode').value;
 
   if(!workbookData || !workbookData.length){
     showError('No data loaded.');
@@ -308,6 +313,7 @@ function generateReport(){
 
   // group rows by company, then by date (summing multiple entries same day)
   const byCompany = {};
+  const byDateAll = {}; // aggregated across ALL companies, per date
   let skipped = 0;
 
   workbookData.forEach(row => {
@@ -322,6 +328,11 @@ function generateReport(){
     if(!byCompany[company][dayKey]) byCompany[company][dayKey] = {date:dateVal, credit:0, debit:0};
     byCompany[company][dayKey].credit += credit;
     byCompany[company][dayKey].debit += debit;
+
+    if(!byDateAll[dayKey]) byDateAll[dayKey] = {date:dateVal, credit:0, debit:0, companies:new Set()};
+    byDateAll[dayKey].credit += credit;
+    byDateAll[dayKey].debit += debit;
+    byDateAll[dayKey].companies.add(company);
   });
 
   const companyNames = Object.keys(byCompany).sort();
@@ -332,29 +343,34 @@ function generateReport(){
 
   let html = '';
   let grandTotal = 0;
-
-  // summary bar placeholder, filled after computing totals
-  const companyFinalTotals = [];
+  let grandCredit = 0;
+  let grandDebit = 0;
 
   companyNames.forEach(company => {
     const days = Object.values(byCompany[company]).sort((a,b) => a.date - b.date);
     let running = 0;
+    let totalCredit = 0;
+    let totalDebit = 0;
     let rowsHtml = '';
     days.forEach(d => {
       const net = d.credit - d.debit;
       running += net;
-      const shown = mode === 'running' ? running : net;
-      const cls = shown < 0 ? 'neg' : 'pos';
+      totalCredit += d.credit;
+      totalDebit += d.debit;
+      const netCls = net < 0 ? 'neg' : 'pos';
+      const runCls = running < 0 ? 'neg' : 'pos';
       rowsHtml += `<tr>
         <td>${formatDate(d.date)}</td>
         <td>${formatMoney(d.credit)}</td>
         <td>${formatMoney(d.debit)}</td>
-        <td class="${cls}">${formatMoney(shown)}</td>
+        <td class="${netCls}">${formatMoney(net)}</td>
+        <td class="${runCls}">${formatMoney(running)}</td>
       </tr>`;
     });
     const finalBalance = running;
     grandTotal += finalBalance;
-    companyFinalTotals.push({company, finalBalance});
+    grandCredit += totalCredit;
+    grandDebit += totalDebit;
     const finalCls = finalBalance < 0 ? 'neg' : 'pos';
 
     html += `
@@ -363,31 +379,88 @@ function generateReport(){
         <h3>${company}</h3>
         <div class="totals">
           <span>${days.length} date${days.length>1?'s':''}</span>
+          <span>Total Credit: ${formatMoney(totalCredit)}</span>
+          <span>Total Debit: ${formatMoney(totalDebit)}</span>
           <span class="final ${finalCls}">Balance: ${formatMoney(finalBalance)}</span>
           <span class="chev">▾</span>
         </div>
       </div>
       <table>
         <thead>
-          <tr><th>Date</th><th>Credit</th><th>Debit</th><th>${mode==='running'?'Running Balance':"Day's Net"}</th></tr>
+          <tr><th>Date</th><th>Credit</th><th>Debit</th><th>Total</th><th>Running Balance</th></tr>
         </thead>
         <tbody>
           ${rowsHtml}
-          <tr class="grand"><td>Final Balance</td><td></td><td></td><td class="${finalCls}">${formatMoney(finalBalance)}</td></tr>
+          <tr class="grand"><td>Total / Final Balance</td><td>${formatMoney(totalCredit)}</td><td>${formatMoney(totalDebit)}</td><td class="${finalCls}">${formatMoney(finalBalance)}</td><td class="${finalCls}">${formatMoney(finalBalance)}</td></tr>
         </tbody>
       </table>
     </div>`;
   });
 
   const grandCls = grandTotal < 0 ? 'neg' : 'pos';
+
+  const grandHeadingHtml = `
+    <div class="grand-heading">
+      <h2>Grand Total — All Companies, All Dates</h2>
+      <div class="figures">
+        <div><div class="num pos">${formatMoney(grandCredit)}</div><div class="lbl">Total Credit</div></div>
+        <div><div class="num neg">${formatMoney(grandDebit)}</div><div class="lbl">Total Debit</div></div>
+        <div><div class="num ${grandCls}">${formatMoney(grandTotal)}</div><div class="lbl">Total Balance</div></div>
+      </div>
+    </div>`;
+
   const summaryHtml = `
     <div class="summary-bar">
       <div class="stat"><div class="num">${companyNames.length}</div><div class="lbl">Companies</div></div>
       <div class="stat"><div class="num">${workbookData.length - skipped}</div><div class="lbl">Rows processed${skipped ? ' ('+skipped+' skipped)' : ''}</div></div>
+      <div class="stat"><div class="num pos">${formatMoney(grandCredit)}</div><div class="lbl">Total Credit (all companies)</div></div>
+      <div class="stat"><div class="num neg">${formatMoney(grandDebit)}</div><div class="lbl">Total Debit (all companies)</div></div>
       <div class="stat"><div class="num ${grandCls}">${formatMoney(grandTotal)}</div><div class="lbl">Grand Total Balance (all companies)</div></div>
     </div>`;
 
-  resultsArea.innerHTML = summaryHtml + html;
+  // Build date-wise totals table (across all companies)
+  const allDates = Object.values(byDateAll).sort((a,b) => a.date - b.date);
+  let dateRunning = 0;
+  let dateRowsHtml = '';
+  allDates.forEach(d => {
+    const net = d.credit - d.debit;
+    dateRunning += net;
+    const netCls = net < 0 ? 'neg' : 'pos';
+    const runCls = dateRunning < 0 ? 'neg' : 'pos';
+    dateRowsHtml += `<tr>
+      <td>${formatDate(d.date)}</td>
+      <td>${d.companies.size}</td>
+      <td>${formatMoney(d.credit)}</td>
+      <td>${formatMoney(d.debit)}</td>
+      <td class="${netCls}">${formatMoney(net)}</td>
+      <td class="${runCls}">${formatMoney(dateRunning)}</td>
+    </tr>`;
+  });
+  const dateGrandCls = grandTotal < 0 ? 'neg' : 'pos';
+  const dateWiseHtml = `
+    <div class="company-card" id="dateWiseCard">
+      <div class="company-head" onclick="this.parentElement.classList.toggle('collapsed')">
+        <h3>Date-wise Totals (All Companies)</h3>
+        <div class="totals">
+          <span>${allDates.length} date${allDates.length>1?'s':''}</span>
+          <span>Total Credit: ${formatMoney(grandCredit)}</span>
+          <span>Total Debit: ${formatMoney(grandDebit)}</span>
+          <span class="final ${dateGrandCls}">Balance: ${formatMoney(grandTotal)}</span>
+          <span class="chev">▾</span>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Date</th><th>Companies</th><th>Credit</th><th>Debit</th><th>Total</th><th>Running Balance</th></tr>
+        </thead>
+        <tbody>
+          ${dateRowsHtml}
+          <tr class="grand"><td>Total / Final Balance</td><td></td><td>${formatMoney(grandCredit)}</td><td>${formatMoney(grandDebit)}</td><td class="${dateGrandCls}">${formatMoney(grandTotal)}</td><td class="${dateGrandCls}">${formatMoney(grandTotal)}</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+
+  resultsArea.innerHTML = grandHeadingHtml + summaryHtml + dateWiseHtml + html;
 }
 </script>
 
