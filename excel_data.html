@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Debit & Credit Balance Calculator</title>
+<title>Debit & Credit Pending Balance Calculator</title>
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -21,7 +21,7 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 1500px;
     margin: 25px auto;
     padding: 15px;
 }
@@ -155,7 +155,7 @@ button {
 }
 
 /* =========================
-   FILE PREVIEW
+   PREVIEW SECTION
 ========================= */
 
 .preview-section {
@@ -178,7 +178,7 @@ button {
 
 .table-wrapper {
     overflow-x: auto;
-    max-height: 400px;
+    max-height: 450px;
     overflow-y: auto;
 }
 
@@ -196,6 +196,7 @@ th {
     white-space: nowrap;
     position: sticky;
     top: 0;
+    z-index: 2;
 }
 
 td {
@@ -206,6 +207,20 @@ td {
 
 tr:hover td {
     background: #f8fafc;
+}
+
+/* Debit calculation columns */
+
+.debit-calc {
+    color: #2563eb;
+    font-weight: bold;
+}
+
+/* Credit amount */
+
+.credit-amount {
+    color: #16a34a;
+    font-weight: bold;
 }
 
 /* =========================
@@ -331,17 +346,19 @@ tfoot td {
 <h1>Debit & Credit Pending Balance Calculator</h1>
 
 <div class="subtitle">
-    Mobile-wise calculation using separate Debit and Credit files
+    Mobile-wise Debit Topup and Credit Payment Calculation
 </div>
 
 
 <!-- =====================================================
-     UPLOAD FILES
+     UPLOAD SECTION
 ===================================================== -->
 
 <div class="upload-section">
 
-    <!-- ================= DEBIT FILE ================= -->
+    <!-- =========================
+         DEBIT FILE
+    ========================== -->
 
     <div class="upload-card">
 
@@ -390,14 +407,16 @@ tfoot td {
 
             <br>
 
-            Mobile number is the unique key.
+            Duplicate Mobile numbers are combined.
 
         </div>
 
     </div>
 
 
-    <!-- ================= CREDIT FILE ================= -->
+    <!-- =========================
+         CREDIT FILE
+    ========================== -->
 
     <div class="upload-card">
 
@@ -438,11 +457,13 @@ tfoot td {
 
         <div class="formula">
 
-            <strong>All credit payments are counted.</strong>
+            <strong>
+                All TOTAL CREDIT PAYMENT amounts are counted.
+            </strong>
 
             <br>
 
-            Payment mode does NOT affect the calculation.
+            Payment mode does not affect the calculation.
 
         </div>
 
@@ -490,24 +511,78 @@ tfoot td {
 
 
 <!-- =====================================================
-     FILE PREVIEWS
+     FILE DATA PREVIEW
 ===================================================== -->
 
 <div class="preview-section">
 
-    <!-- DEBIT PREVIEW -->
+
+    <!-- =================================================
+         DEBIT FILE DATA
+    ================================================== -->
 
     <div class="preview-card">
 
-        <h2>Debit File Data</h2>
+        <h2>📥 Debit File Data</h2>
 
         <div class="table-wrapper">
 
             <table>
 
-                <thead id="debitPreviewHead"></thead>
+                <thead>
 
-                <tbody id="debitPreviewBody"></tbody>
+                    <tr>
+
+                        <th>Mobile</th>
+
+                        <th>Name</th>
+
+                        <th>SHOP NAME</th>
+
+                        <th>OB</th>
+
+                        <th>DR</th>
+
+                        <th>DEBIT TOPUP</th>
+
+                        <th>DEBIT TOPUP MODE</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody
+                    id="debitPreviewBody"
+                ></tbody>
+
+                <tfoot>
+
+                    <tr>
+
+                        <td colspan="3">
+                            TOTAL
+                        </td>
+
+                        <td id="debitPreviewOB">
+                            ₹0
+                        </td>
+
+                        <td id="debitPreviewDR">
+                            ₹0
+                        </td>
+
+                        <td
+                            id="debitPreviewTopup"
+                            class="debit-calc"
+                        >
+                            ₹0
+                        </td>
+
+                        <td></td>
+
+                    </tr>
+
+                </tfoot>
 
             </table>
 
@@ -516,19 +591,60 @@ tfoot td {
     </div>
 
 
-    <!-- CREDIT PREVIEW -->
+    <!-- =================================================
+         CREDIT FILE DATA
+    ================================================== -->
 
     <div class="preview-card">
 
-        <h2>Credit File Data</h2>
+        <h2>📤 Credit File Data</h2>
 
         <div class="table-wrapper">
 
             <table>
 
-                <thead id="creditPreviewHead"></thead>
+                <thead>
 
-                <tbody id="creditPreviewBody"></tbody>
+                    <tr>
+
+                        <th>Mobile</th>
+
+                        <th>Name</th>
+
+                        <th>SHOP NAME</th>
+
+                        <th>TOTAL CREDIT PAYMENT</th>
+
+                        <th>RECEIVED PAYMENT MODE</th>
+
+                    </tr>
+
+                </thead>
+
+                <tbody
+                    id="creditPreviewBody"
+                ></tbody>
+
+                <tfoot>
+
+                    <tr>
+
+                        <td colspan="3">
+                            TOTAL
+                        </td>
+
+                        <td
+                            id="creditPreviewTotal"
+                            class="credit-amount"
+                        >
+                            ₹0
+                        </td>
+
+                        <td></td>
+
+                    </tr>
+
+                </tfoot>
 
             </table>
 
@@ -544,6 +660,7 @@ tfoot td {
 ===================================================== -->
 
 <div class="summary">
+
 
     <div class="summary-card">
 
@@ -627,7 +744,9 @@ tfoot td {
 
             </thead>
 
-            <tbody id="resultBody"></tbody>
+            <tbody
+                id="resultBody"
+            ></tbody>
 
             <tfoot>
 
@@ -665,7 +784,7 @@ tfoot td {
 <script>
 
 /* =====================================================
-   GLOBAL VARIABLES
+   GLOBAL DATA
 ===================================================== */
 
 let finalData = [];
@@ -676,7 +795,7 @@ let creditRawData = [];
 
 
 /* =====================================================
-   NORMALIZE COLUMN NAME
+   NORMALIZE COLUMN
 ===================================================== */
 
 function normalize(value) {
@@ -695,26 +814,31 @@ function normalize(value) {
 
 function findColumn(row, names) {
 
-    const columns = Object.keys(row);
+    const columns =
+        Object.keys(row);
 
     for (const name of names) {
 
-        const found = columns.find(
-            column =>
-                normalize(column) === normalize(name)
-        );
+        const found =
+            columns.find(
+                column =>
+                    normalize(column) ===
+                    normalize(name)
+            );
 
         if (found) {
             return found;
         }
+
     }
 
     return null;
+
 }
 
 
 /* =====================================================
-   NUMBER
+   NUMBER CONVERSION
 ===================================================== */
 
 function numberValue(value) {
@@ -725,31 +849,35 @@ function numberValue(value) {
 
     let cleaned =
         String(value || "")
-        .replace(/₹/g, "")
-        .replace(/,/g, "")
-        .replace(/\s/g, "")
-        .trim();
+            .replace(/₹/g, "")
+            .replace(/,/g, "")
+            .replace(/\s/g, "")
+            .trim();
 
-    let result = parseFloat(cleaned);
+    let result =
+        parseFloat(cleaned);
 
-    return isNaN(result) ? 0 : result;
+    return isNaN(result)
+        ? 0
+        : result;
 
 }
 
 
 /* =====================================================
-   MONEY
+   MONEY FORMAT
 ===================================================== */
 
 function money(value) {
 
     return "₹" +
-        Number(value || 0).toLocaleString(
-            "en-IN",
-            {
-                maximumFractionDigits: 2
-            }
-        );
+        Number(value || 0)
+            .toLocaleString(
+                "en-IN",
+                {
+                    maximumFractionDigits: 2
+                }
+            );
 
 }
 
@@ -804,75 +932,7 @@ async function readFile(file) {
 
 
 /* =====================================================
-   PREVIEW FILE
-===================================================== */
-
-function displayPreview(
-    rows,
-    headId,
-    bodyId
-) {
-
-    const head =
-        document.getElementById(headId);
-
-    const body =
-        document.getElementById(bodyId);
-
-    head.innerHTML = "";
-    body.innerHTML = "";
-
-    if (!rows.length) {
-        return;
-    }
-
-    const columns =
-        Object.keys(rows[0]);
-
-    let headerRow =
-        document.createElement("tr");
-
-    columns.forEach(column => {
-
-        let th =
-            document.createElement("th");
-
-        th.textContent =
-            column;
-
-        headerRow.appendChild(th);
-
-    });
-
-    head.appendChild(headerRow);
-
-
-    rows.forEach(row => {
-
-        let tr =
-            document.createElement("tr");
-
-        columns.forEach(column => {
-
-            let td =
-                document.createElement("td");
-
-            td.textContent =
-                row[column];
-
-            tr.appendChild(td);
-
-        });
-
-        body.appendChild(tr);
-
-    });
-
-}
-
-
-/* =====================================================
-   AUTOMATIC DEBIT FILE PREVIEW
+   DEBIT FILE CHANGE
 ===================================================== */
 
 document
@@ -892,10 +952,8 @@ document
                         this.files[0]
                     );
 
-                displayPreview(
-                    debitRawData,
-                    "debitPreviewHead",
-                    "debitPreviewBody"
+                displayDebitData(
+                    debitRawData
                 );
 
                 showMessage(
@@ -905,6 +963,8 @@ document
 
             }
             catch(error) {
+
+                console.error(error);
 
                 showMessage(
                     "Could not read Debit file.",
@@ -918,7 +978,7 @@ document
 
 
 /* =====================================================
-   AUTOMATIC CREDIT FILE PREVIEW
+   CREDIT FILE CHANGE
 ===================================================== */
 
 document
@@ -938,10 +998,8 @@ document
                         this.files[0]
                     );
 
-                displayPreview(
-                    creditRawData,
-                    "creditPreviewHead",
-                    "creditPreviewBody"
+                displayCreditData(
+                    creditRawData
                 );
 
                 showMessage(
@@ -951,6 +1009,8 @@ document
 
             }
             catch(error) {
+
+                console.error(error);
 
                 showMessage(
                     "Could not read Credit file.",
@@ -964,12 +1024,27 @@ document
 
 
 /* =====================================================
-   PARSE DEBIT DATA
+   DISPLAY DEBIT FILE DATA
 ===================================================== */
 
-function parseDebitRows(rows) {
+function displayDebitData(rows) {
 
-    return rows.map(row => {
+    const body =
+        document.getElementById(
+            "debitPreviewBody"
+        );
+
+    body.innerHTML = "";
+
+
+    let totalOB = 0;
+
+    let totalDR = 0;
+
+    let totalTopup = 0;
+
+
+    rows.forEach(row => {
 
         const mobileColumn =
             findColumn(
@@ -1014,6 +1089,15 @@ function parseDebitRows(rows) {
                 ]
             );
 
+        const modeColumn =
+            findColumn(
+                row,
+                [
+                    "DEBIT TOPUP MODE",
+                    "Debit Topup Mode"
+                ]
+            );
+
 
         const mobile =
             String(
@@ -1040,38 +1124,113 @@ function parseDebitRows(rows) {
                 row[drColumn]
             );
 
+        const mode =
+            String(
+                row[modeColumn] || ""
+            ).trim();
+
 
         /*
-            DEBIT TOPUP
+            IMPORTANT:
 
-            OB + DR
+            DEBIT TOPUP = OB + DR
         */
 
-        const debit =
+        const debitTopup =
             ob + dr;
 
 
-        return {
+        totalOB += ob;
 
-            mobile,
-            name,
-            shop,
-            debit
+        totalDR += dr;
 
-        };
+        totalTopup += debitTopup;
+
+
+        const tr =
+            document.createElement("tr");
+
+
+        tr.innerHTML = `
+
+            <td>
+                ${escapeHTML(mobile)}
+            </td>
+
+            <td>
+                ${escapeHTML(name)}
+            </td>
+
+            <td>
+                ${escapeHTML(shop)}
+            </td>
+
+            <td>
+                ${money(ob)}
+            </td>
+
+            <td>
+                ${money(dr)}
+            </td>
+
+            <td class="debit-calc">
+                ${money(debitTopup)}
+            </td>
+
+            <td>
+                ${escapeHTML(mode)}
+            </td>
+
+        `;
+
+
+        body.appendChild(tr);
 
     });
+
+
+    /*
+        DEBIT TOTALS
+    */
+
+    document.getElementById(
+        "debitPreviewOB"
+    ).textContent =
+        money(totalOB);
+
+
+    document.getElementById(
+        "debitPreviewDR"
+    ).textContent =
+        money(totalDR);
+
+
+    document.getElementById(
+        "debitPreviewTopup"
+    ).textContent =
+        money(totalTopup);
 
 }
 
 
 /* =====================================================
-   PARSE CREDIT DATA
+   DISPLAY CREDIT FILE DATA
 ===================================================== */
 
-function parseCreditRows(rows) {
+function displayCreditData(rows) {
 
-    return rows.map(row => {
+    const body =
+        document.getElementById(
+            "creditPreviewBody"
+        );
+
+    body.innerHTML = "";
+
+
+    let totalCredit = 0;
+
+
+    rows.forEach(row => {
 
         const mobileColumn =
             findColumn(
@@ -1110,6 +1269,15 @@ function parseCreditRows(rows) {
                 ]
             );
 
+        const modeColumn =
+            findColumn(
+                row,
+                [
+                    "RECEIVED PAYMENT MODE",
+                    "Received Payment Mode"
+                ]
+            );
+
 
         const mobile =
             String(
@@ -1131,35 +1299,65 @@ function parseCreditRows(rows) {
                 row[paymentColumn]
             );
 
+        const mode =
+            String(
+                row[modeColumn] || ""
+            ).trim();
+
 
         /*
-            PAYMENT MODE IS COMPLETELY IGNORED.
+            PAYMENT MODE IS NOT USED.
 
-            CASH       -> COUNT
-            MTD        -> COUNT
-            REVERSED   -> COUNT
-            UPI        -> COUNT
-            BANK       -> COUNT
-            ANYTHING   -> COUNT
+            ALL CREDIT PAYMENT IS COUNTED.
         */
 
+        totalCredit += credit;
 
-        return {
 
-            mobile,
-            name,
-            shop,
-            credit
+        const tr =
+            document.createElement("tr");
 
-        };
+
+        tr.innerHTML = `
+
+            <td>
+                ${escapeHTML(mobile)}
+            </td>
+
+            <td>
+                ${escapeHTML(name)}
+            </td>
+
+            <td>
+                ${escapeHTML(shop)}
+            </td>
+
+            <td class="credit-amount">
+                ${money(credit)}
+            </td>
+
+            <td>
+                ${escapeHTML(mode)}
+            </td>
+
+        `;
+
+
+        body.appendChild(tr);
 
     });
+
+
+    document.getElementById(
+        "creditPreviewTotal"
+    ).textContent =
+        money(totalCredit);
 
 }
 
 
 /* =====================================================
-   CALCULATE BALANCE
+   CALCULATE FINAL BALANCE
 ===================================================== */
 
 async function calculateBalance() {
@@ -1205,42 +1403,19 @@ async function calculateBalance() {
             READ FILES
         */
 
-        const debitRaw =
+        const debitRows =
             await readFile(
                 debitFile
             );
 
-        const creditRaw =
+        const creditRows =
             await readFile(
                 creditFile
             );
 
 
         /*
-            PARSE
-        */
-
-        const debitRows =
-            parseDebitRows(
-                debitRaw
-            );
-
-        const creditRows =
-            parseCreditRows(
-                creditRaw
-            );
-
-
-        /*
-            MOBILE NUMBER IS UNIQUE.
-
-            This Map ensures:
-
-            9999999999
-            9999999999
-            9999999999
-
-            becomes ONE account.
+            UNIQUE MOBILE MAP
         */
 
         const accounts =
@@ -1248,14 +1423,16 @@ async function calculateBalance() {
 
 
         /*
-            CREATE / GET ACCOUNT
+            GET ACCOUNT
+
+            Mobile is UNIQUE.
         */
 
-        function getAccount(row) {
-
-            const mobile =
-                row.mobile;
-
+        function getAccount(
+            mobile,
+            name,
+            shop
+        ) {
 
             if (!accounts.has(mobile)) {
 
@@ -1265,9 +1442,9 @@ async function calculateBalance() {
 
                         mobile: mobile,
 
-                        name: row.name,
+                        name: name,
 
-                        shop: row.shop,
+                        shop: shop,
 
                         debit: 0,
 
@@ -1278,56 +1455,235 @@ async function calculateBalance() {
 
             }
 
+            const account =
+                accounts.get(mobile);
 
-            return accounts.get(mobile);
+
+            /*
+                Fill name/shop if
+                they were missing.
+            */
+
+            if (
+                !account.name &&
+                name
+            ) {
+                account.name = name;
+            }
+
+            if (
+                !account.shop &&
+                shop
+            ) {
+                account.shop = shop;
+            }
+
+
+            return account;
 
         }
 
 
-        /* =========================
-           ADD DEBIT
-        ========================= */
+        /* =================================================
+           PROCESS DEBIT
+        ================================================= */
 
         debitRows.forEach(row => {
 
-            if (!row.mobile) {
+            const mobileColumn =
+                findColumn(
+                    row,
+                    [
+                        "Mobile",
+                        "Mobile No",
+                        "Mobile Number"
+                    ]
+                );
+
+            const nameColumn =
+                findColumn(
+                    row,
+                    [
+                        "Name"
+                    ]
+                );
+
+            const shopColumn =
+                findColumn(
+                    row,
+                    [
+                        "SHOP NAME",
+                        "Shop Name"
+                    ]
+                );
+
+            const obColumn =
+                findColumn(
+                    row,
+                    [
+                        "OB"
+                    ]
+                );
+
+            const drColumn =
+                findColumn(
+                    row,
+                    [
+                        "DR"
+                    ]
+                );
+
+
+            const mobile =
+                String(
+                    row[mobileColumn] || ""
+                ).trim();
+
+            if (!mobile) {
                 return;
             }
 
+
+            const name =
+                String(
+                    row[nameColumn] || ""
+                ).trim();
+
+            const shop =
+                String(
+                    row[shopColumn] || ""
+                ).trim();
+
+            const ob =
+                numberValue(
+                    row[obColumn]
+                );
+
+            const dr =
+                numberValue(
+                    row[drColumn]
+                );
+
+
+            /*
+                OB + DR
+            */
+
+            const debitTopup =
+                ob + dr;
+
+
             const account =
-                getAccount(row);
+                getAccount(
+                    mobile,
+                    name,
+                    shop
+                );
+
+
+            /*
+                Duplicate mobile rows
+                are added together.
+            */
 
             account.debit +=
-                row.debit;
+                debitTopup;
 
         });
 
 
-        /* =========================
-           ADD CREDIT
-        ========================= */
+        /* =================================================
+           PROCESS CREDIT
+        ================================================= */
 
         creditRows.forEach(row => {
 
-            if (!row.mobile) {
+            const mobileColumn =
+                findColumn(
+                    row,
+                    [
+                        "Mobile",
+                        "Mobile No",
+                        "Mobile Number"
+                    ]
+                );
+
+            const nameColumn =
+                findColumn(
+                    row,
+                    [
+                        "Name"
+                    ]
+                );
+
+            const shopColumn =
+                findColumn(
+                    row,
+                    [
+                        "SHOP NAME",
+                        "Shop Name"
+                    ]
+                );
+
+            const paymentColumn =
+                findColumn(
+                    row,
+                    [
+                        "TOTAL CREDIT PAYMENT",
+                        "TOTAL CREDIT",
+                        "CREDIT PAYMENT"
+                    ]
+                );
+
+
+            const mobile =
+                String(
+                    row[mobileColumn] || ""
+                ).trim();
+
+            if (!mobile) {
                 return;
             }
 
+
+            const name =
+                String(
+                    row[nameColumn] || ""
+                ).trim();
+
+            const shop =
+                String(
+                    row[shopColumn] || ""
+                ).trim();
+
+            const credit =
+                numberValue(
+                    row[paymentColumn]
+                );
+
+
             const account =
-                getAccount(row);
+                getAccount(
+                    mobile,
+                    name,
+                    shop
+                );
+
+
+            /*
+                ALL credit payment
+                modes are counted.
+            */
 
             account.credit +=
-                row.credit;
+                credit;
 
         });
 
 
-        /*
-            FINAL FORMULA
-
-            Pending =
-            Debit Topup - Credit Payment
-        */
+        /* =================================================
+           FINAL CALCULATION
+        ================================================= */
 
         finalData =
             Array.from(
@@ -1336,7 +1692,20 @@ async function calculateBalance() {
 
                 return {
 
-                    ...account,
+                    mobile:
+                        account.mobile,
+
+                    name:
+                        account.name,
+
+                    shop:
+                        account.shop,
+
+                    debit:
+                        account.debit,
+
+                    credit:
+                        account.credit,
 
                     pending:
                         account.debit
@@ -1349,7 +1718,7 @@ async function calculateBalance() {
 
 
         /*
-            SORT MOBILE
+            SORT BY MOBILE
         */
 
         finalData.sort(
@@ -1361,7 +1730,7 @@ async function calculateBalance() {
 
 
         /*
-            DISPLAY
+            SHOW RESULTS
         */
 
         displayResults();
@@ -1378,7 +1747,7 @@ async function calculateBalance() {
         console.error(error);
 
         showMessage(
-            "Error reading files. Please check the column names.",
+            "Error reading the files. Please check the required column names.",
             "error"
         );
 
@@ -1388,7 +1757,7 @@ async function calculateBalance() {
 
 
 /* =====================================================
-   DISPLAY RESULTS
+   DISPLAY FINAL RESULTS
 ===================================================== */
 
 function displayResults() {
@@ -1646,20 +2015,30 @@ function resetAll() {
 
 
     document.getElementById(
-        "debitPreviewHead"
-    ).innerHTML = "";
-
-    document.getElementById(
         "debitPreviewBody"
-    ).innerHTML = "";
-
-    document.getElementById(
-        "creditPreviewHead"
     ).innerHTML = "";
 
     document.getElementById(
         "creditPreviewBody"
     ).innerHTML = "";
+
+
+    document.getElementById(
+        "debitPreviewOB"
+    ).textContent = "₹0";
+
+    document.getElementById(
+        "debitPreviewDR"
+    ).textContent = "₹0";
+
+    document.getElementById(
+        "debitPreviewTopup"
+    ).textContent = "₹0";
+
+
+    document.getElementById(
+        "creditPreviewTotal"
+    ).textContent = "₹0";
 
 
     document.getElementById(
@@ -1704,7 +2083,10 @@ function resetAll() {
    MESSAGE
 ===================================================== */
 
-function showMessage(text, type) {
+function showMessage(
+    text,
+    type
+) {
 
     const message =
         document.getElementById(
